@@ -1,1 +1,32 @@
-/* You can add global styles to this file, and also import other style files */
+@use '@angular/material' as mat;
+@use 'bootstrap/scss/bootstrap-grid';
+
+// Material core styles: elevation, ripple, focus indicator
+@include mat.core();
+
+// Doña Pierina custom theme — verde natural + naranja cálido
+$tema: mat.define-theme((
+  color: (
+    theme-type: light,
+    primary: mat.$green-palette,
+    tertiary: mat.$orange-palette,
+  ),
+  density: (scale: 0),
+));
+
+html {
+  @include mat.all-component-themes($tema);
+}
+
+// Base
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  font-family: Roboto, 'Helvetica Neue', sans-serif;
+  background-color: #f5f5f5;
+}

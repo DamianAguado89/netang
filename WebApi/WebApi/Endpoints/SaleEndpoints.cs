@@ -1,5 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using WebApi.Data;
+using WebApi.DTOs;
 using WebApi.Models;
 
 namespace WebApi.Endpoints;
@@ -8,9 +9,10 @@ public static class SaleEndpoints
 {
     public static void MapSaleEndpoints(this WebApplication app)
     {
-        var group = app.MapGroup("/api/sales");
+        var group = app.MapGroup("/api/sales").WithTags("Sales");
 
         group.MapGet("/", GetAllSales);
+        group.MapGet("/week", GetSalesByWeek);
         group.MapGet("/{id:int}", GetSale);
         group.MapPost("/", CreateSale);
         group.MapPut("/{id:int}", UpdateSale);
@@ -22,6 +24,25 @@ public static class SaleEndpoints
         var list = await db.Sales
             .Include(s => s.Customer)
             .Include(s => s.SaleDetails).ThenInclude(sd => sd.Product)
+            .Select(s => ToDto(s))
+            .ToListAsync();
+        return TypedResults.Ok(list);
+    }
+
+    // GET /api/sales/week?date=2026-05-19  (defaults to current week if no date)
+    private static async Task<IResult> GetSalesByWeek(ApplicationDbContext db, DateTime? date)
+    {
+        var reference = date?.ToUniversalTime() ?? DateTime.UtcNow;
+        var monday = reference.AddDays(-(int)reference.DayOfWeek + (int)DayOfWeek.Monday).Date;
+        if (reference.DayOfWeek == DayOfWeek.Sunday)
+            monday = monday.AddDays(-7);
+        var nextMonday = monday.AddDays(7);
+
+        var list = await db.Sales
+            .Include(s => s.Customer)
+            .Include(s => s.SaleDetails).ThenInclude(sd => sd.Product)
+            .Where(s => s.RegistrationDate >= monday && s.RegistrationDate < nextMonday)
+            .Select(s => ToDto(s))
             .ToListAsync();
         return TypedResults.Ok(list);
     }
@@ -32,64 +53,80 @@ public static class SaleEndpoints
             .Include(s => s.Customer)
             .Include(s => s.SaleDetails).ThenInclude(sd => sd.Product)
             .FirstOrDefaultAsync(s => s.Id == id);
-        return sale is not null ? TypedResults.Ok(sale) : TypedResults.NotFound();
+        return sale is not null ? TypedResults.Ok(ToDto(sale)) : TypedResults.NotFound();
     }
 
-    private static async Task<IResult> CreateSale(Sale input, ApplicationDbContext db)
+    private static async Task<IResult> CreateSale(CreateSaleRequest req, ApplicationDbContext db)
     {
-        if (!await db.Customers.AnyAsync(c => c.Id == input.CustomerId))
-            return TypedResults.BadRequest($"Customer {input.CustomerId} does not exist.");
+        if (!await db.Customers.AnyAsync(c => c.Id == req.CustomerId))
+            return TypedResults.BadRequest($"Customer {req.CustomerId} does not exist.");
 
-        input.RegistrationDate = DateTime.UtcNow;
-
-        if (input.SaleDetails != null && input.SaleDetails.Any())
+        var sale = new Sale
         {
-            foreach (var sd in input.SaleDetails)
-            {
-                if (!await db.Products.AnyAsync(p => p.Id == sd.ProductId))
-                    return TypedResults.BadRequest($"Product {sd.ProductId} does not exist.");
-                sd.Total = sd.Price * sd.Quantity;
-            }
+            CustomerId = req.CustomerId,
+            DocumentNumber = req.DocumentNumber,
+            PaymentType = req.PaymentType,
+            Notes = req.Notes,
+            RegistrationDate = DateTime.UtcNow
+        };
 
-            input.Total = input.SaleDetails.Sum(sd => sd.Total);
+        foreach (var item in req.SaleDetails)
+        {
+            if (!await db.Products.AnyAsync(p => p.Id == item.ProductId))
+                return TypedResults.BadRequest($"Product {item.ProductId} does not exist.");
+
+            sale.SaleDetails.Add(new SaleDetail
+            {
+                ProductId = item.ProductId,
+                Quantity = item.Quantity,
+                Price = item.Price,
+                Total = item.Price * item.Quantity
+            });
         }
 
-        db.Sales.Add(input);
+        sale.Total = sale.SaleDetails.Sum(sd => sd.Total);
+        db.Sales.Add(sale);
         await db.SaveChangesAsync();
-        return TypedResults.Created($"/api/sales/{input.Id}", input);
+
+        await db.Entry(sale).Reference(s => s.Customer).LoadAsync();
+        await db.Entry(sale).Collection(s => s.SaleDetails).Query()
+            .Include(sd => sd.Product).LoadAsync();
+
+        return TypedResults.Created($"/api/sales/{sale.Id}", ToDto(sale));
     }
 
-    private static async Task<IResult> UpdateSale(int id, Sale input, ApplicationDbContext db)
+    private static async Task<IResult> UpdateSale(int id, CreateSaleRequest req, ApplicationDbContext db)
     {
         var sale = await db.Sales.Include(s => s.SaleDetails).FirstOrDefaultAsync(s => s.Id == id);
         if (sale is null) return TypedResults.NotFound();
 
-        if (!await db.Customers.AnyAsync(c => c.Id == input.CustomerId))
-            return TypedResults.BadRequest($"Customer {input.CustomerId} does not exist.");
+        if (!await db.Customers.AnyAsync(c => c.Id == req.CustomerId))
+            return TypedResults.BadRequest($"Customer {req.CustomerId} does not exist.");
 
-        sale.DocumentNumber = input.DocumentNumber;
-        sale.PaymentType = input.PaymentType;
-        sale.CustomerId = input.CustomerId;
+        sale.DocumentNumber = req.DocumentNumber;
+        sale.PaymentType = req.PaymentType;
+        sale.Notes = req.Notes;
+        sale.CustomerId = req.CustomerId;
 
-        if (input.SaleDetails != null)
+        db.SaleDetails.RemoveRange(sale.SaleDetails);
+
+        foreach (var item in req.SaleDetails)
         {
-            // Replace details: remove existing, add new
-            db.SaleDetails.RemoveRange(sale.SaleDetails);
-            await db.SaveChangesAsync();
+            if (!await db.Products.AnyAsync(p => p.Id == item.ProductId))
+                return TypedResults.BadRequest($"Product {item.ProductId} does not exist.");
 
-            foreach (var sd in input.SaleDetails)
+            sale.SaleDetails.Add(new SaleDetail
             {
-                if (!await db.Products.AnyAsync(p => p.Id == sd.ProductId))
-                    return TypedResults.BadRequest($"Product {sd.ProductId} does not exist.");
-
-                sd.Total = sd.Price * sd.Quantity;
-                sd.SaleId = sale.Id;
-                db.SaleDetails.Add(sd);
-            }
+                SaleId = sale.Id,
+                ProductId = item.ProductId,
+                Quantity = item.Quantity,
+                Price = item.Price,
+                Total = item.Price * item.Quantity
+            });
         }
 
+        sale.Total = sale.SaleDetails.Sum(sd => sd.Total);
         await db.SaveChangesAsync();
-        await RecalculateSaleTotal(sale.Id, db);
         return TypedResults.NoContent();
     }
 
@@ -97,21 +134,24 @@ public static class SaleEndpoints
     {
         var sale = await db.Sales.Include(s => s.SaleDetails).FirstOrDefaultAsync(s => s.Id == id);
         if (sale is null) return TypedResults.NotFound();
-
         db.SaleDetails.RemoveRange(sale.SaleDetails);
         db.Sales.Remove(sale);
         await db.SaveChangesAsync();
         return TypedResults.NoContent();
     }
 
-    private static async Task RecalculateSaleTotal(int saleId, ApplicationDbContext db)
-    {
-        var total = await db.SaleDetails.Where(sd => sd.SaleId == saleId).SumAsync(sd => (decimal?)sd.Total) ?? 0m;
-        var sale = await db.Sales.FindAsync(saleId);
-        if (sale is not null)
-        {
-            sale.Total = total;
-            await db.SaveChangesAsync();
-        }
-    }
+    private static SaleDto ToDto(Sale s) => new(
+        s.Id,
+        s.DocumentNumber,
+        s.PaymentType,
+        s.Notes,
+        s.Total,
+        s.RegistrationDate,
+        s.CustomerId,
+        s.Customer?.Name ?? string.Empty,
+        s.Customer?.Phone,
+        s.SaleDetails.Select(sd => new SaleDetailDto(
+            sd.Id, sd.ProductId, sd.Product?.Name ?? string.Empty,
+            sd.Quantity, sd.Price, sd.Total)).ToList()
+    );
 }

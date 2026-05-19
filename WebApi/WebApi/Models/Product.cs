@@ -24,6 +24,14 @@ public class Product
     [Display(Name = "Price")]
     public decimal Price { get; set; }
 
+    [StringLength(500)]
+    [Display(Name = "Description")]
+    public string? Description { get; set; }
+
+    [StringLength(500)]
+    [Display(Name = "Image URL")]
+    public string? ImageUrl { get; set; }
+
     [Display(Name = "Is Active")]
     public bool IsActive { get; set; } = true;
 

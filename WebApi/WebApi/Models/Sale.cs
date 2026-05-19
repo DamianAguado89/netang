@@ -19,6 +19,10 @@ public class Sale
     [Display(Name = "Payment Type")]
     public string? PaymentType { get; set; }
 
+    [StringLength(500)]
+    [Display(Name = "Notes")]
+    public string? Notes { get; set; }
+
     [Required]
     [Column(TypeName = "decimal(18,2)")]
     [DataType(DataType.Currency)]

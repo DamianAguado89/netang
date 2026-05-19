@@ -1,47 +1,62 @@
 using Microsoft.EntityFrameworkCore;
 using Microsoft.OpenApi;
-using System;
+using System.Text.Json.Serialization;
 using WebApi.Data;
 using WebApi.Endpoints;
 
 var builder = WebApplication.CreateBuilder(args);
 
-// Add DbContext - update the connection string in appsettings.json
+// DbContext
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
+
+// JSON: ignore circular references produced by navigation properties
+builder.Services.ConfigureHttpJsonOptions(options =>
+    options.SerializerOptions.ReferenceHandler = ReferenceHandler.IgnoreCycles);
+
+// CORS: allow Angular dev server and future production origin
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("AllowAngular", policy =>
+        policy.WithOrigins("http://localhost:4200")
+              .AllowAnyHeader()
+              .AllowAnyMethod());
+});
 
 // Swagger / OpenAPI
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(c =>
 {
-    c.SwaggerDoc("v1", new OpenApiInfo { Title = "WebApi", Version = "v1" });
+    c.SwaggerDoc("v1", new OpenApiInfo { Title = "Doña Pierina API", Version = "v1" });
 
-    // Include XML comments if the project generates them
     var xmlFile = $"{System.Reflection.Assembly.GetExecutingAssembly().GetName().Name}.xml";
     var xmlPath = Path.Combine(AppContext.BaseDirectory, xmlFile);
     if (File.Exists(xmlPath))
-    {
         c.IncludeXmlComments(xmlPath);
-    }
 });
 
 var app = builder.Build();
 
-// Enable Swagger (you can restrict to Development if desired)
+app.UseCors("AllowAngular");
+
 app.UseSwagger();
 app.UseSwaggerUI(c =>
 {
-    c.SwaggerEndpoint("/swagger/v1/swagger.json", "WebApi v1");
-    c.RoutePrefix = "swagger"; // swagger UI at /swagger
+    c.SwaggerEndpoint("/swagger/v1/swagger.json", "Doña Pierina API v1");
+    c.RoutePrefix = "swagger";
 });
 
-// Register endpoint classes
+// Admin endpoints
 app.MapCategoryEndpoints();
 app.MapProductEndpoints();
 app.MapCustomerEndpoints();
 app.MapSaleEndpoints();
 app.MapSaleDetailEndpoints();
 
-app.MapGet("/", () => "Hello World!");
+// Public endpoints (storefront)
+app.MapCatalogEndpoints();
+app.MapOrderEndpoints();
+
+app.MapGet("/", () => "Doña Pierina API");
 
 app.Run();

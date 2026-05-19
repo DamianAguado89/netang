@@ -8,7 +8,7 @@ public static class SaleDetailEndpoints
 {
     public static void MapSaleDetailEndpoints(this WebApplication app)
     {
-        var group = app.MapGroup("/api/saledetails");
+        var group = app.MapGroup("/api/saledetails").WithTags("Sale Details");
 
         group.MapGet("/", GetAllDetails);
         group.MapGet("/{id:int}", GetDetail);
