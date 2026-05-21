@@ -1,0 +1,42 @@
+<div class="cart-header">
+  <h2>Tu pedido</h2>
+  <button mat-icon-button (click)="close.emit()" aria-label="Cerrar carrito">
+    <mat-icon>close</mat-icon>
+  </button>
+</div>
+
+<div class="cart-items">
+  @for (item of catalogService.cart(); track item.product.id) {
+    <div class="cart-item">
+      <div class="item-info">
+        <span class="item-name">{{ item.product.name }}</span>
+        <span class="item-price">${{ item.product.price | number:'1.0-0' }}</span>
+      </div>
+      <div class="item-controls">
+        <button mat-icon-button (click)="catalogService.updateQuantity(item.product.id, -1)" aria-label="Quitar uno">
+          <mat-icon>remove</mat-icon>
+        </button>
+        <span class="item-qty">{{ item.quantity }}</span>
+        <button mat-icon-button (click)="catalogService.updateQuantity(item.product.id, 1)" aria-label="Agregar uno">
+          <mat-icon>add</mat-icon>
+        </button>
+        <button mat-icon-button (click)="catalogService.removeFromCart(item.product.id)" aria-label="Eliminar producto">
+          <mat-icon>delete_outline</mat-icon>
+        </button>
+      </div>
+      <span class="item-subtotal">${{ item.product.price * item.quantity | number:'1.0-0' }}</span>
+    </div>
+    <mat-divider />
+  }
+</div>
+
+<div class="cart-footer">
+  <div class="total-row">
+    <span class="total-label">Total</span>
+    <span class="total-value">${{ catalogService.cartTotal() | number:'1.0-0' }}</span>
+  </div>
+  <button mat-flat-button color="primary" class="checkout-btn" (click)="checkout.emit()">
+    <mat-icon>shopping_bag</mat-icon>
+    Hacer pedido
+  </button>
+</div>

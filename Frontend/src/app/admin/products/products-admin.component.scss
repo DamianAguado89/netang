@@ -1,0 +1,33 @@
+.admin-header {
+  background-color: #1b5e20;
+  color: white;
+  z-index: 100;
+
+  .brand-name {
+    font-size: 1.1rem;
+    font-weight: 700;
+    line-height: 1.2;
+  }
+
+  .brand-subtitle {
+    font-size: 0.7rem;
+    opacity: 0.85;
+    letter-spacing: 0.02em;
+  }
+
+  .back-btn {
+    color: white;
+  }
+
+  .admin-icon {
+    opacity: 0.7;
+    font-size: 28px;
+    width: 28px;
+    height: 28px;
+  }
+}
+
+.admin-content {
+  min-height: calc(100vh - 56px);
+  background-color: #f5f5f5;
+}

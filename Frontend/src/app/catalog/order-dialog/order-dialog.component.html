@@ -1,0 +1,87 @@
+@if (orderResponse()) {
+  <!-- SUCCESS STATE -->
+  <div class="success-state">
+    <mat-icon class="success-icon">check_circle</mat-icon>
+    <h2>¡Pedido enviado!</h2>
+    <p class="doc-number">N° {{ orderResponse()!.documentNumber }}</p>
+    <p class="success-msg">
+      Hola <strong>{{ orderResponse()!.customerName }}</strong>, recibimos tu pedido.
+      Te lo tenemos listo el jueves.
+    </p>
+    <p class="success-total">Total: ${{ orderResponse()!.total | number:'1.0-0' }}</p>
+    <button mat-flat-button color="primary" (click)="close()">Cerrar</button>
+  </div>
+} @else {
+  <!-- FORM STATE -->
+  <div mat-dialog-title class="dialog-title">
+    <span>Confirmar pedido</span>
+    <button mat-icon-button (click)="close()" aria-label="Cerrar">
+      <mat-icon>close</mat-icon>
+    </button>
+  </div>
+
+  <mat-dialog-content>
+    <!-- Order summary -->
+    <div class="order-summary">
+      @for (item of catalogService.cart(); track item.product.id) {
+        <div class="summary-item">
+          <span>{{ item.quantity }}x {{ item.product.name }}</span>
+          <span>${{ item.product.price * item.quantity | number:'1.0-0' }}</span>
+        </div>
+      }
+      <div class="summary-total">
+        <span>Total</span>
+        <span>${{ catalogService.cartTotal() | number:'1.0-0' }}</span>
+      </div>
+    </div>
+
+    <!-- Customer form -->
+    <form [formGroup]="form" class="customer-form">
+      <mat-form-field appearance="outline" class="full-width">
+        <mat-label>Tu nombre *</mat-label>
+        <input matInput formControlName="customerName" placeholder="Ej: María González" />
+        @if (form.controls.customerName.hasError('required') && form.controls.customerName.touched) {
+          <mat-error>El nombre es obligatorio</mat-error>
+        }
+        @if (form.controls.customerName.hasError('minlength') && form.controls.customerName.touched) {
+          <mat-error>Mínimo 2 caracteres</mat-error>
+        }
+      </mat-form-field>
+
+      <mat-form-field appearance="outline" class="full-width">
+        <mat-label>Teléfono</mat-label>
+        <input matInput formControlName="customerPhone" placeholder="Ej: 3584 123456" type="tel" />
+      </mat-form-field>
+
+      <mat-form-field appearance="outline" class="full-width">
+        <mat-label>Dirección de entrega</mat-label>
+        <input matInput formControlName="customerAddress" placeholder="Ej: San Martín 123" />
+      </mat-form-field>
+
+      <mat-form-field appearance="outline" class="full-width">
+        <mat-label>Notas</mat-label>
+        <textarea matInput formControlName="notes" rows="2" placeholder="Algún comentario..."></textarea>
+      </mat-form-field>
+    </form>
+
+    @if (submitError()) {
+      <p class="submit-error">{{ submitError() }}</p>
+    }
+  </mat-dialog-content>
+
+  <mat-dialog-actions align="end">
+    <button mat-button (click)="close()">Cancelar</button>
+    <button
+      mat-flat-button
+      color="primary"
+      [disabled]="submitting()"
+      (click)="submit()"
+    >
+      @if (submitting()) {
+        <mat-spinner diameter="20" />
+      } @else {
+        Confirmar pedido
+      }
+    </button>
+  </mat-dialog-actions>
+}

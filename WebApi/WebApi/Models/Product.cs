@@ -48,4 +48,9 @@ public class Product
     public Category? Category { get; set; }
 
     public ICollection<SaleDetail> SaleDetails { get; set; } = new List<SaleDetail>();
+
+    public byte[]? ImageData { get; set; }
+
+    [StringLength(100)]
+    public string? ImageContentType { get; set; }
 }

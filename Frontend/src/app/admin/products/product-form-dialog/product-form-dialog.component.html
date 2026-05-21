@@ -1,0 +1,148 @@
+<h2 mat-dialog-title>
+  <mat-icon class="dialog-title-icon">{{ isEdit ? 'edit' : 'add_circle' }}</mat-icon>
+  {{ isEdit ? 'Editar Producto' : 'Nuevo Producto' }}
+</h2>
+
+<mat-dialog-content>
+  @if (saveError()) {
+    <div class="save-error mb-3" role="alert">
+      <mat-icon>error_outline</mat-icon>
+      {{ saveError() }}
+    </div>
+  }
+
+  <form [formGroup]="form" (ngSubmit)="save()" class="form-grid">
+
+    <mat-form-field appearance="outline" class="full-width">
+      <mat-label>Nombre *</mat-label>
+      <input matInput formControlName="name" placeholder="Ej: Alfajor de maicena" />
+      @if (form.controls.name.invalid && form.controls.name.touched) {
+        <mat-error>El nombre es obligatorio (máx. 100 caracteres).</mat-error>
+      }
+    </mat-form-field>
+
+    <mat-form-field appearance="outline" class="full-width">
+      <mat-label>Descripción</mat-label>
+      <textarea
+        matInput
+        formControlName="description"
+        placeholder="Descripción breve del producto"
+        rows="2"
+      ></textarea>
+    </mat-form-field>
+
+    <!-- Sección de imagen -->
+    <div class="image-upload-section">
+      @if (imagePreview()) {
+        <div class="image-preview-wrap">
+          <img [src]="imagePreview()" alt="Vista previa" class="image-preview" />
+        </div>
+      } @else {
+        <div class="image-placeholder">
+          <mat-icon>image</mat-icon>
+          <span>Sin imagen</span>
+        </div>
+      }
+
+      <button mat-stroked-button type="button" (click)="fileInput.click()" class="upload-btn">
+        <mat-icon>upload</mat-icon>
+        {{ imagePreview() ? 'Cambiar imagen' : 'Subir imagen' }}
+      </button>
+      <input
+        #fileInput
+        type="file"
+        accept="image/*"
+        class="hidden-input"
+        (change)="onFileSelected($event)"
+      />
+
+      @if (selectedFile()) {
+        <span class="file-name">{{ selectedFile()!.name }}</span>
+      }
+    </div>
+
+    <div class="row g-3">
+      <div class="col-6">
+        <mat-form-field appearance="outline" class="full-width">
+          <mat-label>Precio *</mat-label>
+          <span matPrefix>$&nbsp;</span>
+          <input
+            matInput
+            formControlName="price"
+            type="text"
+            inputmode="decimal"
+            placeholder="0,00"
+            autocomplete="off"
+          />
+          @if (form.controls.price.invalid && form.controls.price.touched) {
+            <mat-error>Ingresá un precio válido (ej: 1500 o 1500,50).</mat-error>
+          }
+        </mat-form-field>
+      </div>
+      <div class="col-6">
+        <mat-form-field appearance="outline" class="full-width">
+          <mat-label>Stock *</mat-label>
+          <input
+            matInput
+            formControlName="stock"
+            type="text"
+            inputmode="numeric"
+            placeholder="0"
+            autocomplete="off"
+          />
+          @if (form.controls.stock.invalid && form.controls.stock.touched) {
+            <mat-error>Ingresá una cantidad entera válida.</mat-error>
+          }
+        </mat-form-field>
+      </div>
+    </div>
+
+    <div class="category-row">
+      <mat-form-field appearance="outline" class="category-field">
+        <mat-label>Categoría *</mat-label>
+        <mat-select formControlName="categoryId">
+          @for (cat of categories(); track cat.id) {
+            <mat-option [value]="cat.id">{{ cat.name }}</mat-option>
+          }
+        </mat-select>
+        @if (form.controls.categoryId.invalid && form.controls.categoryId.touched) {
+          <mat-error>Seleccioná una categoría.</mat-error>
+        }
+      </mat-form-field>
+
+      <button
+        mat-icon-button
+        type="button"
+        color="primary"
+        matTooltip="Administrar categorías"
+        (click)="goToCategories()"
+        class="category-add-btn"
+        aria-label="Ir a categorías"
+      >
+        <mat-icon>add_circle</mat-icon>
+      </button>
+    </div>
+
+    <div class="mt-1">
+      <mat-checkbox formControlName="isActive" color="primary">
+        Producto activo (visible en el catálogo)
+      </mat-checkbox>
+    </div>
+
+  </form>
+</mat-dialog-content>
+
+<mat-dialog-actions align="end">
+  <button mat-button (click)="cancel()" [disabled]="saving()">Cancelar</button>
+  <button
+    mat-raised-button
+    color="primary"
+    (click)="save()"
+    [disabled]="saving()"
+  >
+    @if (saving()) {
+      <mat-spinner diameter="18" class="btn-spinner"></mat-spinner>
+    }
+    {{ saving() ? 'Guardando...' : 'Guardar' }}
+  </button>
+</mat-dialog-actions>

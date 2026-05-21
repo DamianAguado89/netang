@@ -16,7 +16,6 @@ public record ProductDto(
 public record CreateProductRequest(
     string Name,
     string? Description,
-    string? ImageUrl,
     decimal Price,
     int Stock,
     bool IsActive,
@@ -26,7 +25,6 @@ public record CreateProductRequest(
 public record UpdateProductRequest(
     string Name,
     string? Description,
-    string? ImageUrl,
     decimal Price,
     int Stock,
     bool IsActive,

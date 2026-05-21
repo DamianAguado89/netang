@@ -22,8 +22,9 @@ public static class CatalogEndpoints
             .Where(p => p.IsActive)
             .OrderBy(p => p.Category!.Name).ThenBy(p => p.Name)
             .Select(p => new ProductDto(
-                p.Id, p.Name, p.Description, p.ImageUrl, p.Price, p.Stock,
-                p.IsActive, p.CategoryId, p.Category!.Name, p.RegistrationDate))
+                p.Id, p.Name, p.Description,
+                p.ImageData != null ? $"/api/products/{p.Id}/image" : null,
+                p.Price, p.Stock, p.IsActive, p.CategoryId, p.Category!.Name, p.RegistrationDate))
             .ToListAsync();
         return TypedResults.Ok(products);
     }
@@ -37,8 +38,9 @@ public static class CatalogEndpoints
 
         return p is not null
             ? TypedResults.Ok(new ProductDto(
-                p.Id, p.Name, p.Description, p.ImageUrl, p.Price, p.Stock,
-                p.IsActive, p.CategoryId, p.Category!.Name, p.RegistrationDate))
+                p.Id, p.Name, p.Description,
+                p.ImageData != null ? $"/api/products/{p.Id}/image" : null,
+                p.Price, p.Stock, p.IsActive, p.CategoryId, p.Category!.Name, p.RegistrationDate))
             : TypedResults.NotFound();
     }
 }

@@ -13,7 +13,9 @@ public static class ProductEndpoints
 
         group.MapGet("/", GetAllProducts);
         group.MapGet("/{id:int}", GetProduct);
+        group.MapGet("/{id:int}/image", GetProductImage);
         group.MapPost("/", CreateProduct);
+        group.MapPost("/{id:int}/image", UploadProductImage).DisableAntiforgery();
         group.MapPut("/{id:int}", UpdateProduct);
         group.MapDelete("/{id:int}", DeleteProduct);
     }
@@ -23,8 +25,9 @@ public static class ProductEndpoints
         var list = await db.Products
             .Include(p => p.Category)
             .Select(p => new ProductDto(
-                p.Id, p.Name, p.Description, p.ImageUrl, p.Price, p.Stock,
-                p.IsActive, p.CategoryId, p.Category!.Name, p.RegistrationDate))
+                p.Id, p.Name, p.Description,
+                p.ImageData != null ? $"/api/products/{p.Id}/image" : null,
+                p.Price, p.Stock, p.IsActive, p.CategoryId, p.Category!.Name, p.RegistrationDate))
             .ToListAsync();
         return TypedResults.Ok(list);
     }
@@ -34,9 +37,31 @@ public static class ProductEndpoints
         var p = await db.Products.Include(p => p.Category).FirstOrDefaultAsync(p => p.Id == id);
         return p is not null
             ? TypedResults.Ok(new ProductDto(
-                p.Id, p.Name, p.Description, p.ImageUrl, p.Price, p.Stock,
-                p.IsActive, p.CategoryId, p.Category!.Name, p.RegistrationDate))
+                p.Id, p.Name, p.Description,
+                p.ImageData != null ? $"/api/products/{p.Id}/image" : null,
+                p.Price, p.Stock, p.IsActive, p.CategoryId, p.Category!.Name, p.RegistrationDate))
             : TypedResults.NotFound();
+    }
+
+    private static async Task<IResult> GetProductImage(int id, ApplicationDbContext db)
+    {
+        var product = await db.Products.FindAsync(id);
+        if (product is null || product.ImageData is null)
+            return TypedResults.NotFound();
+        return TypedResults.File(product.ImageData, product.ImageContentType ?? "image/jpeg");
+    }
+
+    private static async Task<IResult> UploadProductImage(int id, IFormFile image, ApplicationDbContext db)
+    {
+        var product = await db.Products.FindAsync(id);
+        if (product is null) return TypedResults.NotFound();
+
+        using var ms = new MemoryStream();
+        await image.CopyToAsync(ms);
+        product.ImageData = ms.ToArray();
+        product.ImageContentType = image.ContentType;
+        await db.SaveChangesAsync();
+        return TypedResults.NoContent();
     }
 
     private static async Task<IResult> CreateProduct(CreateProductRequest req, ApplicationDbContext db)
@@ -48,7 +73,6 @@ public static class ProductEndpoints
         {
             Name = req.Name,
             Description = req.Description,
-            ImageUrl = req.ImageUrl,
             Price = req.Price,
             Stock = req.Stock,
             IsActive = req.IsActive,
@@ -60,7 +84,8 @@ public static class ProductEndpoints
 
         await db.Entry(product).Reference(p => p.Category).LoadAsync();
         return TypedResults.Created($"/api/products/{product.Id}",
-            new ProductDto(product.Id, product.Name, product.Description, product.ImageUrl,
+            new ProductDto(product.Id, product.Name, product.Description,
+                product.ImageData != null ? $"/api/products/{product.Id}/image" : null,
                 product.Price, product.Stock, product.IsActive, product.CategoryId,
                 product.Category!.Name, product.RegistrationDate));
     }
@@ -75,7 +100,6 @@ public static class ProductEndpoints
 
         product.Name = req.Name;
         product.Description = req.Description;
-        product.ImageUrl = req.ImageUrl;
         product.Price = req.Price;
         product.Stock = req.Stock;
         product.IsActive = req.IsActive;

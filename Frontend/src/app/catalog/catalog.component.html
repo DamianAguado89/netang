@@ -1,0 +1,136 @@
+<mat-sidenav-container class="catalog-container">
+
+  <mat-sidenav
+    class="catalog-sidenav"
+    mode="over"
+    [opened]="navOpen()"
+    (closedStart)="navOpen.set(false)"
+  >
+    <div class="sidenav-header">
+      <div class="sidenav-icon-wrap">
+        <mat-icon>storefront</mat-icon>
+      </div>
+      <div>
+        <div class="sidenav-brand">Doña Pierina</div>
+        <div class="sidenav-sub">Sin TACC · Villa Ascasubi</div>
+      </div>
+    </div>
+
+    <mat-divider />
+
+    <nav class="sidenav-nav">
+      <a
+        class="sidenav-link"
+        routerLink="/"
+        routerLinkActive="active"
+        [routerLinkActiveOptions]="{ exact: true }"
+        (click)="closeNav()"
+      >
+        <mat-icon>storefront</mat-icon>
+        <span>Catálogo</span>
+      </a>
+
+      <mat-divider class="nav-divider" />
+
+      <a
+        class="sidenav-link"
+        routerLink="/admin/products"
+        routerLinkActive="active"
+        (click)="closeNav()"
+      >
+        <mat-icon>inventory_2</mat-icon>
+        <span>Productos</span>
+      </a>
+
+      <a
+        class="sidenav-link"
+        routerLink="/admin/categories"
+        routerLinkActive="active"
+        (click)="closeNav()"
+      >
+        <mat-icon>category</mat-icon>
+        <span>Categorías</span>
+      </a>
+    </nav>
+  </mat-sidenav>
+
+  <mat-sidenav-content class="catalog-sidenav-content">
+
+    <header class="catalog-header sticky-top">
+      <div class="container-fluid d-flex align-items-center justify-content-between px-3 py-2">
+        <div class="d-flex align-items-center gap-2">
+          <button mat-icon-button class="menu-btn" (click)="toggleNav()" aria-label="Abrir menú">
+            <mat-icon>menu</mat-icon>
+          </button>
+          <div>
+            <div class="brand-name">Doña Pierina</div>
+            <div class="brand-subtitle">Sin TACC · Villa Ascasubi</div>
+          </div>
+        </div>
+        <button
+          mat-icon-button
+          class="cart-btn"
+          [disabled]="catalogService.cartCount() === 0"
+          [matBadge]="catalogService.cartCount() > 0 ? catalogService.cartCount() : null"
+          matBadgeColor="warn"
+          (click)="toggleCart()"
+          aria-label="Abrir carrito"
+        >
+          <mat-icon>shopping_cart</mat-icon>
+        </button>
+      </div>
+    </header>
+
+    <div class="container-fluid px-3 py-3">
+      <div class="category-filter mb-3">
+        <mat-chip-listbox [value]="selectedCategory()" (change)="filterByCategory($event.value)">
+          <mat-chip-option [value]="null">Todos</mat-chip-option>
+          @for (cat of categories(); track cat) {
+            <mat-chip-option [value]="cat">{{ cat }}</mat-chip-option>
+          }
+        </mat-chip-listbox>
+      </div>
+
+      @if (catalogService.loading()) {
+        <div class="loading-state d-flex justify-content-center align-items-center py-5">
+          <mat-spinner diameter="48"></mat-spinner>
+        </div>
+      }
+
+      @if (catalogService.error()) {
+        <div class="alert alert-danger" role="alert">
+          {{ catalogService.error() }}
+        </div>
+      }
+
+      @if (!catalogService.loading() && !catalogService.error()) {
+        <div class="row g-3">
+          @for (product of filteredProducts(); track product.id) {
+            <div class="col-12 col-sm-6 col-lg-4">
+              <app-product-card
+                [product]="product"
+                [quantity]="catalogService.cartQuantities().get(product.id) ?? 0"
+                (add)="catalogService.addToCart(product)"
+                (changeQty)="catalogService.updateQuantity(product.id, $event)"
+              />
+            </div>
+          }
+          @empty {
+            <div class="col-12 text-center py-5 text-muted">
+              No hay productos en esta categoría.
+            </div>
+          }
+        </div>
+      }
+    </div>
+
+    @if (cartOpen()) {
+      <div class="cart-overlay" (click)="closeCart()"></div>
+      <div class="cart-panel">
+        <app-cart (close)="closeCart()" (checkout)="openOrderDialog()" />
+      </div>
+    }
+
+  </mat-sidenav-content>
+
+</mat-sidenav-container>

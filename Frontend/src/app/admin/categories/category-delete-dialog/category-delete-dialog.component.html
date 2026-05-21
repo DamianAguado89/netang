@@ -1,0 +1,22 @@
+<h2 mat-dialog-title class="d-flex align-items-center gap-2">
+  <mat-icon color="warn">warning</mat-icon>
+  Eliminar Categoría
+</h2>
+
+<mat-dialog-content>
+  <p>
+    ¿Estás seguro de que querés eliminar
+    <strong>{{ data.category.name }}</strong>?
+  </p>
+  <p class="text-muted" style="font-size: 0.875rem;">
+    Esta acción no se puede deshacer. Si la categoría tiene productos asociados, la eliminación fallará.
+  </p>
+</mat-dialog-content>
+
+<mat-dialog-actions align="end">
+  <button mat-button (click)="cancel()">Cancelar</button>
+  <button mat-raised-button color="warn" (click)="confirm()">
+    <mat-icon>delete</mat-icon>
+    Eliminar
+  </button>
+</mat-dialog-actions>
