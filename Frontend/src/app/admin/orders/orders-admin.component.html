@@ -1,0 +1,18 @@
+<header class="admin-header sticky-top">
+  <div class="container-fluid d-flex align-items-center justify-content-between px-3 py-2">
+    <div class="d-flex align-items-center gap-2">
+      <a mat-icon-button routerLink="/" aria-label="Volver al catálogo" class="back-btn">
+        <mat-icon>arrow_back</mat-icon>
+      </a>
+      <div>
+        <div class="brand-name">Doña Pierina</div>
+        <div class="brand-subtitle">Administración · Pedidos</div>
+      </div>
+    </div>
+    <mat-icon class="admin-icon">receipt_long</mat-icon>
+  </div>
+</header>
+
+<main class="admin-content">
+  <app-order-list />
+</main>

@@ -1,0 +1,96 @@
+@if (loading()) {
+  <div class="loading-state d-flex justify-content-center align-items-center py-4">
+    <mat-spinner diameter="40"></mat-spinner>
+  </div>
+}
+
+@if (error()) {
+  <div class="alert alert-danger m-3" role="alert">
+    <mat-icon class="me-2">error_outline</mat-icon>
+    {{ error() }}
+  </div>
+  <mat-dialog-actions align="end">
+    <button mat-button mat-dialog-close>Cerrar</button>
+  </mat-dialog-actions>
+}
+
+@if (!loading() && sale()) {
+  <h2 mat-dialog-title class="dialog-title">
+    <mat-icon class="title-icon">receipt_long</mat-icon>
+    N° {{ sale()!.documentNumber }}
+  </h2>
+
+  <mat-dialog-content class="dialog-content">
+
+    <section class="info-section">
+      <div class="info-row">
+        <mat-icon class="info-icon">person</mat-icon>
+        <span class="info-label">Cliente</span>
+        <span class="info-value">{{ sale()!.customerName }}</span>
+      </div>
+
+      @if (sale()!.customerPhone) {
+        <div class="info-row">
+          <mat-icon class="info-icon">phone</mat-icon>
+          <span class="info-label">Teléfono</span>
+          <span class="info-value">{{ sale()!.customerPhone }}</span>
+        </div>
+      }
+
+      @if (sale()!.notes) {
+        <div class="info-row">
+          <mat-icon class="info-icon">notes</mat-icon>
+          <span class="info-label">Notas</span>
+          <span class="info-value notes-value">{{ sale()!.notes }}</span>
+        </div>
+      }
+    </section>
+
+    <section class="items-section">
+      <h3 class="section-title">Productos</h3>
+      <div class="table-wrapper">
+        <table mat-table [dataSource]="sale()!.saleDetails" class="w-100">
+
+          <ng-container matColumnDef="productName">
+            <th mat-header-cell *matHeaderCellDef>Producto</th>
+            <td mat-cell *matCellDef="let d">{{ d.productName }}</td>
+          </ng-container>
+
+          <ng-container matColumnDef="quantity">
+            <th mat-header-cell *matHeaderCellDef class="text-center">Cant.</th>
+            <td mat-cell *matCellDef="let d" class="text-center">{{ d.quantity }}</td>
+          </ng-container>
+
+          <ng-container matColumnDef="price">
+            <th mat-header-cell *matHeaderCellDef class="text-end">Precio Unit.</th>
+            <td mat-cell *matCellDef="let d" class="text-end">
+              {{ d.price | currency: 'ARS' : '$' : '1.0-0' : 'es-AR' }}
+            </td>
+          </ng-container>
+
+          <ng-container matColumnDef="total">
+            <th mat-header-cell *matHeaderCellDef class="text-end">Subtotal</th>
+            <td mat-cell *matCellDef="let d" class="text-end">
+              {{ d.total | currency: 'ARS' : '$' : '1.0-0' : 'es-AR' }}
+            </td>
+          </ng-container>
+
+          <tr mat-header-row *matHeaderRowDef="detailColumns"></tr>
+          <tr mat-row *matRowDef="let row; columns: detailColumns;"></tr>
+        </table>
+      </div>
+
+      <div class="total-row">
+        <span class="total-label">Total</span>
+        <span class="total-value">
+          {{ sale()!.total | currency: 'ARS' : '$' : '1.0-0' : 'es-AR' }}
+        </span>
+      </div>
+    </section>
+
+  </mat-dialog-content>
+
+  <mat-dialog-actions align="end">
+    <button mat-button mat-dialog-close>Cerrar</button>
+  </mat-dialog-actions>
+}

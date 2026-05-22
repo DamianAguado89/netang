@@ -20,5 +20,12 @@ export const routes: Routes = [
         (m) => m.CategoriesAdminComponent
       ),
   },
+  {
+    path: 'admin/orders',
+    loadComponent: () =>
+      import('./admin/orders/orders-admin.component').then(
+        (m) => m.OrdersAdminComponent
+      ),
+  },
   { path: '**', redirectTo: '' },
 ];
