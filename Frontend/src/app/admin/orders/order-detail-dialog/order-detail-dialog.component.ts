@@ -6,8 +6,10 @@ import {
   signal,
 } from '@angular/core';
 import { CurrencyPipe } from '@angular/common';
-import { MAT_DIALOG_DATA, MatDialogModule } from '@angular/material/dialog';
+import { Router } from '@angular/router';
+import { MAT_DIALOG_DATA, MatDialogModule, MatDialogRef } from '@angular/material/dialog';
 import { MatButtonModule } from '@angular/material/button';
+import { MatChipsModule } from '@angular/material/chips';
 import { MatIconModule } from '@angular/material/icon';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatTableModule } from '@angular/material/table';
@@ -25,6 +27,7 @@ interface DialogData {
   imports: [
     CurrencyPipe,
     MatButtonModule,
+    MatChipsModule,
     MatDialogModule,
     MatIconModule,
     MatProgressSpinnerModule,
@@ -35,6 +38,8 @@ interface DialogData {
 })
 export class OrderDetailDialogComponent implements OnInit {
   private readonly service = inject(OrderAdminService);
+  private readonly router = inject(Router);
+  private readonly dialogRef = inject(MatDialogRef<OrderDetailDialogComponent>);
   readonly data = inject<DialogData>(MAT_DIALOG_DATA);
 
   readonly sale = signal<SaleDto | null>(null);
@@ -54,5 +59,10 @@ export class OrderDetailDialogComponent implements OnInit {
         this.loading.set(false);
       },
     });
+  }
+
+  goToBilling(): void {
+    this.dialogRef.close();
+    this.router.navigate(['/admin/billing', this.sale()!.id]);
   }
 }

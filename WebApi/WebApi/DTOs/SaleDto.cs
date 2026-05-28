@@ -19,7 +19,9 @@ public record SaleDto(
     int CustomerId,
     string CustomerName,
     string? CustomerPhone,
-    List<SaleDetailDto> SaleDetails
+    List<SaleDetailDto> SaleDetails,
+    bool IsConfirmed,
+    DateTime? ConfirmedAt
 );
 
 public record SaleDetailRequest(int ProductId, int Quantity, decimal Price);

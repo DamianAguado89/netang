@@ -92,5 +92,16 @@
 
   <mat-dialog-actions align="end">
     <button mat-button mat-dialog-close>Cerrar</button>
+    @if (!sale()!.isConfirmed) {
+      <button mat-raised-button color="primary" (click)="goToBilling()">
+        <mat-icon>point_of_sale</mat-icon>
+        Confirmar
+      </button>
+    } @else {
+      <mat-chip color="primary" highlighted>
+        <mat-icon>check_circle</mat-icon>
+        Confirmado
+      </mat-chip>
+    }
   </mat-dialog-actions>
 }

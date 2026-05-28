@@ -32,4 +32,8 @@ export class OrderAdminService {
   getOrder(id: number): Observable<SaleDto> {
     return this.http.get<SaleDto>(`${this.api}/sales/${id}`);
   }
+
+  confirmOrder(id: number): Observable<void> {
+    return this.http.post<void>(`${this.api}/sales/${id}/confirm`, {});
+  }
 }

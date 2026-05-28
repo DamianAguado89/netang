@@ -34,6 +34,10 @@ public class Sale
     [DisplayFormat(DataFormatString = "{0:yyyy-MM-dd HH:mm:ss}", ApplyFormatInEditMode = true)]
     public DateTime RegistrationDate { get; set; } = DateTime.UtcNow;
 
+    public bool IsConfirmed { get; set; } = false;
+
+    public DateTime? ConfirmedAt { get; set; }
+
     // Foreign key to Customer
     [Required]
     [Display(Name = "Customer")]

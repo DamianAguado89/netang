@@ -27,5 +27,12 @@ export const routes: Routes = [
         (m) => m.OrdersAdminComponent
       ),
   },
+  {
+    path: 'admin/billing/:id',
+    loadComponent: () =>
+      import('./admin/billing/billing.component').then(
+        (m) => m.BillingComponent
+      ),
+  },
   { path: '**', redirectTo: '' },
 ];

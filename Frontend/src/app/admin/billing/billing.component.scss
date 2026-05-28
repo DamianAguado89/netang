@@ -1,0 +1,129 @@
+.admin-header {
+  background-color: #1b5e20;
+  color: white;
+  z-index: 100;
+
+  .brand-name {
+    font-size: 1.1rem;
+    font-weight: 700;
+    line-height: 1.2;
+  }
+
+  .brand-subtitle {
+    font-size: 0.7rem;
+    opacity: 0.85;
+    letter-spacing: 0.02em;
+  }
+
+  .back-btn {
+    color: white;
+  }
+
+  .admin-icon {
+    opacity: 0.7;
+    font-size: 28px;
+    width: 28px;
+    height: 28px;
+  }
+}
+
+.admin-content {
+  min-height: calc(100vh - 56px);
+  background-color: #f5f5f5;
+}
+
+.billing-ticket {
+  background: white;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.12);
+  padding: 24px;
+  max-width: 600px;
+  margin: 0 auto;
+}
+
+.ticket-header {
+  text-align: center;
+}
+
+.ticket-logo {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  background-color: #2e7d32;
+  color: white;
+  font-weight: bold;
+  font-size: 1rem;
+  margin-bottom: 8px;
+}
+
+.ticket-brand {
+  font-size: 1.3rem;
+  font-weight: 700;
+  line-height: 1.2;
+}
+
+.ticket-sub {
+  font-size: 0.85rem;
+  color: #757575;
+}
+
+.ticket-meta {
+  padding: 0 4px;
+}
+
+.ticket-number {
+  font-size: 0.9rem;
+  color: #555;
+  line-height: 1.6;
+}
+
+.table-wrapper {
+  overflow-x: auto;
+}
+
+.ticket-total-row {
+  display: flex;
+  justify-content: space-between;
+  font-size: 1.2rem;
+  font-weight: 700;
+  color: #2e7d32;
+  margin-top: 12px;
+}
+
+.confirmed-state {
+  text-align: center;
+  padding: 32px 0 8px;
+}
+
+.confirmed-icon {
+  font-size: 64px;
+  color: #2e7d32;
+  width: 64px;
+  height: 64px;
+}
+
+.confirmed-title {
+  font-size: 1.3rem;
+  font-weight: 700;
+  margin-top: 8px;
+}
+
+.confirmed-sub {
+  font-size: 0.9rem;
+  color: #757575;
+  margin-top: 4px;
+}
+
+.btn-spinner {
+  display: inline-block;
+  vertical-align: middle;
+}
+
+@media print {
+  .no-print {
+    display: none !important;
+  }
+}

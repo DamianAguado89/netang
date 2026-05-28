@@ -17,6 +17,7 @@ public static class SaleEndpoints
         group.MapPost("/", CreateSale);
         group.MapPut("/{id:int}", UpdateSale);
         group.MapDelete("/{id:int}", DeleteSale);
+        group.MapPost("/{id:int}/confirm", ConfirmSale);
     }
 
     private static async Task<IResult> GetAllSales(ApplicationDbContext db)
@@ -140,6 +141,30 @@ public static class SaleEndpoints
         return TypedResults.NoContent();
     }
 
+    private static async Task<IResult> ConfirmSale(int id, ApplicationDbContext db)
+    {
+        var sale = await db.Sales
+            .Include(s => s.SaleDetails)
+            .FirstOrDefaultAsync(s => s.Id == id);
+
+        if (sale is null) return TypedResults.NotFound();
+        if (sale.IsConfirmed)
+            return TypedResults.Conflict($"La venta {sale.DocumentNumber} ya fue confirmada.");
+
+        foreach (var detail in sale.SaleDetails)
+        {
+            var product = await db.Products.FindAsync(detail.ProductId);
+            if (product is not null)
+                product.Stock = Math.Max(0, product.Stock - detail.Quantity);
+        }
+
+        sale.IsConfirmed = true;
+        sale.ConfirmedAt = DateTime.UtcNow;
+        await db.SaveChangesAsync();
+
+        return TypedResults.NoContent();
+    }
+
     private static SaleDto ToDto(Sale s) => new(
         s.Id,
         s.DocumentNumber,
@@ -152,6 +177,8 @@ public static class SaleEndpoints
         s.Customer?.Phone,
         s.SaleDetails.Select(sd => new SaleDetailDto(
             sd.Id, sd.ProductId, sd.Product?.Name ?? string.Empty,
-            sd.Quantity, sd.Price, sd.Total)).ToList()
+            sd.Quantity, sd.Price, sd.Total)).ToList(),
+        s.IsConfirmed,
+        s.ConfirmedAt
     );
 }

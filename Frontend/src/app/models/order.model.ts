@@ -17,5 +17,7 @@ export interface SaleDto {
   customerId: number;
   customerName: string;
   customerPhone: string | null;
+  isConfirmed: boolean;
+  confirmedAt: string | null;
   saleDetails: SaleDetailDto[];
 }
