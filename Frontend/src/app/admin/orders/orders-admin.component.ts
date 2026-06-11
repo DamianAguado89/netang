@@ -4,6 +4,12 @@ import { MatButtonModule } from '@angular/material/button';
 import { RouterLink } from '@angular/router';
 import { OrderListComponent } from '@app/admin/orders/order-list/order-list.component';
 
+/**
+ * @description
+ * Componente shell de la sección de administración de pedidos.
+ * Actúa como punto de entrada de la ruta `/admin/orders` y delega
+ * toda la lógica de listado y detalle en sus componentes hijos.
+ */
 @Component({
   selector: 'app-orders-admin',
   standalone: true,

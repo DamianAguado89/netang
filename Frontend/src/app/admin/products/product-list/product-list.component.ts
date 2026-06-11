@@ -24,6 +24,16 @@ import { ProductDeleteDialogComponent } from '@app/admin/products/product-delete
 import { ProductDto } from '@app/models/product.model';
 import { environment } from '@env/environment';
 
+/**
+ * @description
+ * Componente inteligente (smart component) de la sección de administración de productos.
+ * Centraliza toda la lógica de la pantalla: tabla con paginación, búsqueda en tiempo real
+ * y coordinación de los dialogs de creación, edición y eliminación.
+ *
+ * Es hijo directo de `ProductsAdminComponent`, que actúa como shell de la sección.
+ * No expone ningún `input()` ni `output()` porque toda la comunicación ocurre a través
+ * de `ProductAdminService` y los dialogs de Angular Material.
+ */
 @Component({
   selector: 'app-product-list',
   standalone: true,
@@ -48,16 +58,49 @@ export class ProductListComponent implements OnInit {
   private readonly dialog = inject(MatDialog);
   private readonly snackBar = inject(MatSnackBar);
 
+  /**
+   * URL base del servidor sin el segmento `/api`, utilizada para construir
+   * las URLs absolutas de las imágenes de productos que se sirven desde la raíz del servidor.
+   */
   readonly apiBase = environment.apiUrl.replace('/api', '');
 
+  /**
+   * Control reactivo vinculado al campo de texto de búsqueda en el template.
+   * Sus emisiones se puenean hacia `searchTerm` (un Signal) mediante `valueChanges.subscribe()`
+   * porque `computed()` solo puede depender de Signals, no de Observables.
+   */
   readonly searchControl = new FormControl('');
+
+  /**
+   * Signal que almacena el término de búsqueda activo.
+   * Se actualiza desde `valueChanges` de `searchControl` para que `filteredProducts`
+   * pueda reaccionar reactivamente al cambio sin depender del Observable directamente.
+   */
   readonly searchTerm = signal('');
 
+  /**
+   * Lista estática de identificadores de columna para el `MatTable`.
+   * No es un Signal porque el conjunto de columnas nunca varía en tiempo de ejecución.
+   */
   readonly displayedColumns = ['image', 'name', 'category', 'price', 'stock', 'status', 'actions'];
 
+  /**
+   * Alias local al Signal de carga del servicio.
+   * Evita exponer el servicio completo en el template y simplifica el binding.
+   */
   readonly loading = this.service.loading;
+
+  /**
+   * Alias local al Signal de error del servicio.
+   * Permite mostrar mensajes de error en el template sin acceder al servicio directamente.
+   */
   readonly error = this.service.error;
 
+  /**
+   * Signal computado que filtra en memoria los productos ya cargados según `searchTerm`.
+   * La búsqueda es local: no realiza llamadas HTTP adicionales.
+   * Devuelve la lista completa cuando el término está vacío.
+   */
   readonly filteredProducts = computed(() => {
     const term = this.searchTerm().toLowerCase().trim();
     if (!term) return this.service.products();
@@ -66,6 +109,11 @@ export class ProductListComponent implements OnInit {
     );
   });
 
+  /**
+   * @description
+   * Carga inicial de productos y categorías al montar el componente,
+   * y establece el puente Observable→Signal para el campo de búsqueda.
+   */
   ngOnInit(): void {
     this.service.loadProducts();
     this.service.loadCategories();
@@ -75,6 +123,12 @@ export class ProductListComponent implements OnInit {
     );
   }
 
+  /**
+   * @description
+   * Abre el dialog de creación de producto pasando `data: {}` (vacío) para indicarle
+   * al `ProductFormDialogComponent` que opera en modo creación.
+   * Si el dialog se cierra con un resultado truthy, recarga la lista y confirma con snackbar.
+   */
   openCreateDialog(): void {
     const ref = this.dialog.open(ProductFormDialogComponent, {
       width: '560px',
@@ -88,6 +142,14 @@ export class ProductListComponent implements OnInit {
     });
   }
 
+  /**
+   * @description
+   * Abre el dialog de edición pasando el producto seleccionado en `data: { product }`.
+   * El `ProductFormDialogComponent` detecta el modo edición por la presencia de `product` en `data`.
+   * Si el dialog se cierra con un resultado truthy, recarga la lista y confirma con snackbar.
+   *
+   * @param product Producto a editar, provisto por la fila de la tabla.
+   */
   openEditDialog(product: ProductDto): void {
     const ref = this.dialog.open(ProductFormDialogComponent, {
       width: '560px',
@@ -101,6 +163,17 @@ export class ProductListComponent implements OnInit {
     });
   }
 
+  /**
+   * @description
+   * Abre el dialog de confirmación de eliminación. Si el usuario confirma, llama al servicio
+   * para eliminar el producto y recarga la lista.
+   *
+   * Maneja específicamente el error HTTP 409 (Conflict), que el backend devuelve cuando
+   * el producto no puede eliminarse por tener ventas asociadas, mostrando un mensaje
+   * diferenciado al error genérico.
+   *
+   * @param product Producto a eliminar, provisto por la fila de la tabla.
+   */
   openDeleteDialog(product: ProductDto): void {
     const ref = this.dialog.open(ProductDeleteDialogComponent, {
       width: '400px',

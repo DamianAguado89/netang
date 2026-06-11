@@ -112,3 +112,11 @@ import { MatBadgeModule } from '@angular/material/badge';
 - Extract reusable UI into shared components
 - No comments explaining WHAT the code does — only WHY if non-obvious
 - File naming: `feature-name.component.ts`, `feature-name.service.ts`
+
+## Documentación con Compodoc
+Este proyecto usa `@compodoc/compodoc` para generar documentación automática.
+- Todo componente, servicio o clase pública nueva debe incluir JSDoc en **español**.
+- Documentar la clase con `@description`, cada propiedad/signal con su propósito y cada método con `@description` + `@param`/`@returns` cuando aporten claridad.
+- No usar comentarios obvios — solo cuando el "por qué" no es evidente en el código.
+- Script disponible: `npm run compodoc` (sirve la docs en http://localhost:8080 por defecto).
+- Configuración en `Frontend/.compodocrc.json`; la salida se genera en `Frontend/documentation/`.
