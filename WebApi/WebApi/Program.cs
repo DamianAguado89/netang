@@ -1,8 +1,14 @@
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.IdentityModel.Tokens;
 using Microsoft.OpenApi;
+using System.Text;
 using System.Text.Json.Serialization;
 using WebApi.Data;
 using WebApi.Endpoints;
+using WebApi.Models;
+using WebApi.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -10,7 +16,12 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
     options.UseSqlServer(
         builder.Configuration.GetConnectionString("DefaultConnection"),
-        sqlOptions => sqlOptions.CommandTimeout(60)));
+        sqlOptions =>
+        {
+            sqlOptions.CommandTimeout(60);
+            // Reintenta automáticamente ante fallas transitorias (SQL Server aún iniciando, red inestable).
+            sqlOptions.EnableRetryOnFailure(maxRetryCount: 5, maxRetryDelay: TimeSpan.FromSeconds(10), errorNumbersToAdd: null);
+        }));
 
 // JSON: ignore circular references produced by navigation properties
 builder.Services.ConfigureHttpJsonOptions(options =>
@@ -27,6 +38,39 @@ builder.Services.AddCors(options =>
 
 builder.Services.AddAntiforgery();
 
+// Identity — AddIdentityCore evita registrar cookie auth que no se usa en JWT APIs.
+// RequireNonAlphanumeric = false simplifica el registro sin sacrificar seguridad real.
+builder.Services.AddIdentityCore<ApplicationUser>(options =>
+{
+    options.Password.RequireNonAlphanumeric = false;
+    options.Password.RequiredLength = 8;
+})
+.AddRoles<IdentityRole>()
+.AddEntityFrameworkStores<ApplicationDbContext>();
+
+// JWT Authentication
+builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
+    .AddJwtBearer(options =>
+    {
+        options.TokenValidationParameters = new TokenValidationParameters
+        {
+            ValidateIssuer = true,
+            ValidateAudience = true,
+            ValidateLifetime = true,
+            ValidateIssuerSigningKey = true,
+            ValidIssuer = builder.Configuration["Jwt:Issuer"],
+            ValidAudience = builder.Configuration["Jwt:Audience"],
+            IssuerSigningKey = new SymmetricSecurityKey(
+                Encoding.UTF8.GetBytes(builder.Configuration["Jwt:Key"]!))
+        };
+    });
+
+// AdminPolicy requiere rol "Admin" — evaluado desde el claim del JWT sin consultar la DB.
+builder.Services.AddAuthorization(options =>
+    options.AddPolicy("AdminPolicy", policy => policy.RequireRole("Admin")));
+
+builder.Services.AddScoped<TokenService>();
+
 // Swagger / OpenAPI
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen(c =>
@@ -41,7 +85,38 @@ builder.Services.AddSwaggerGen(c =>
 
 var app = builder.Build();
 
+// Seed: roles Admin/Customer y usuario admin inicial si no existen.
+// Solo se ejecuta si AdminSeed:Email está configurado (evita fallar en CI sin config).
+using (var scope = app.Services.CreateScope())
+{
+    var roleManager = scope.ServiceProvider.GetRequiredService<RoleManager<IdentityRole>>();
+    var userManager = scope.ServiceProvider.GetRequiredService<UserManager<ApplicationUser>>();
+
+    foreach (var role in new[] { "Admin", "Customer" })
+        if (!await roleManager.RoleExistsAsync(role))
+            await roleManager.CreateAsync(new IdentityRole(role));
+
+    var adminEmail = app.Configuration["AdminSeed:Email"];
+    var adminPassword = app.Configuration["AdminSeed:Password"];
+    if (adminEmail is not null && await userManager.FindByEmailAsync(adminEmail) is null)
+    {
+        var admin = new ApplicationUser
+        {
+            FullName = "Admin",
+            Email = adminEmail,
+            UserName = adminEmail,
+            EmailConfirmed = true
+        };
+        await userManager.CreateAsync(admin, adminPassword!);
+        await userManager.AddToRoleAsync(admin, "Admin");
+    }
+}
+
 app.UseCors("AllowAngular");
+
+// UseAuthentication y UseAuthorization deben ir después de UseCors y antes de los endpoints.
+app.UseAuthentication();
+app.UseAuthorization();
 
 app.UseSwagger();
 app.UseSwaggerUI(c =>
@@ -50,7 +125,13 @@ app.UseSwaggerUI(c =>
     c.RoutePrefix = "swagger";
 });
 
-// Admin endpoints
+// Auth (público)
+app.MapAuthEndpoints();
+
+// Perfil del usuario autenticado (requiere JWT, cualquier rol)
+app.MapProfileEndpoints();
+
+// Admin endpoints (protegidos con AdminPolicy en cada grupo)
 app.MapCategoryEndpoints();
 app.MapProductEndpoints();
 app.MapCustomerEndpoints();

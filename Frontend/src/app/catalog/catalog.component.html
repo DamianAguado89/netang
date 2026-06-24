@@ -30,37 +30,39 @@
         <span>Catálogo</span>
       </a>
 
-      <mat-divider class="nav-divider" />
+      @if (authService.isAdmin()) {
+        <mat-divider class="nav-divider" />
 
-      <a
-        class="sidenav-link"
-        routerLink="/admin/products"
-        routerLinkActive="active"
-        (click)="closeNav()"
-      >
-        <mat-icon>inventory_2</mat-icon>
-        <span>Productos</span>
-      </a>
+        <a
+          class="sidenav-link"
+          routerLink="/admin/products"
+          routerLinkActive="active"
+          (click)="closeNav()"
+        >
+          <mat-icon>inventory_2</mat-icon>
+          <span>Productos</span>
+        </a>
 
-      <a
-        class="sidenav-link"
-        routerLink="/admin/categories"
-        routerLinkActive="active"
-        (click)="closeNav()"
-      >
-        <mat-icon>category</mat-icon>
-        <span>Categorías</span>
-      </a>
+        <a
+          class="sidenav-link"
+          routerLink="/admin/categories"
+          routerLinkActive="active"
+          (click)="closeNav()"
+        >
+          <mat-icon>category</mat-icon>
+          <span>Categorías</span>
+        </a>
 
-      <a
-        class="sidenav-link"
-        routerLink="/admin/orders"
-        routerLinkActive="active"
-        (click)="closeNav()"
-      >
-        <mat-icon>receipt_long</mat-icon>
-        <span>Pedidos</span>
-      </a>
+        <a
+          class="sidenav-link"
+          routerLink="/admin/orders"
+          routerLinkActive="active"
+          (click)="closeNav()"
+        >
+          <mat-icon>receipt_long</mat-icon>
+          <span>Pedidos</span>
+        </a>
+      }
     </nav>
   </mat-sidenav>
 
@@ -77,17 +79,58 @@
             <div class="brand-subtitle">Sin TACC · Villa Ascasubi</div>
           </div>
         </div>
-        <button
-          mat-icon-button
-          class="cart-btn"
-          [disabled]="catalogService.cartCount() === 0"
-          [matBadge]="catalogService.cartCount() > 0 ? catalogService.cartCount() : null"
-          matBadgeColor="warn"
-          (click)="toggleCart()"
-          aria-label="Abrir carrito"
-        >
-          <mat-icon>shopping_cart</mat-icon>
-        </button>
+        <div class="d-flex align-items-center gap-1">
+          <button
+            mat-icon-button
+            class="cart-btn"
+            [disabled]="catalogService.cartCount() === 0"
+            [matBadge]="catalogService.cartCount() > 0 ? catalogService.cartCount() : null"
+            matBadgeColor="warn"
+            (click)="toggleCart()"
+            aria-label="Abrir carrito"
+          >
+            <mat-icon>shopping_cart</mat-icon>
+          </button>
+
+          @if (authService.isLoggedIn()) {
+            <button mat-icon-button [matMenuTriggerFor]="userMenu" class="avatar-btn" aria-label="Menú de usuario">
+              @if (avatarUrl()) {
+                <img [src]="avatarUrl()" class="avatar-img" [alt]="authService.currentUser()?.fullName" />
+              } @else {
+                <span class="avatar-initials">{{ initials() }}</span>
+              }
+            </button>
+
+            <mat-menu #userMenu="matMenu">
+              <div class="user-menu-header" (click)="$event.stopPropagation()">
+                @if (avatarUrl()) {
+                  <img [src]="avatarUrl()" class="menu-avatar" [alt]="authService.currentUser()?.fullName" />
+                } @else {
+                  <span class="menu-avatar-initials">{{ initials() }}</span>
+                }
+                <div class="menu-user-info">
+                  <span class="menu-user-name">{{ authService.currentUser()?.fullName }}</span>
+                  <span class="menu-user-email">{{ authService.currentUser()?.email }}</span>
+                </div>
+              </div>
+              <mat-divider />
+              <button mat-menu-item routerLink="/profile">
+                <mat-icon>manage_accounts</mat-icon>
+                Editar perfil
+              </button>
+              <button mat-menu-item (click)="logout()">
+                <mat-icon>logout</mat-icon>
+                Cerrar sesión
+              </button>
+            </mat-menu>
+          }
+
+          @if (!authService.isLoggedIn()) {
+            <button mat-stroked-button routerLink="/login" class="login-btn">
+              Ingresar
+            </button>
+          }
+        </div>
       </div>
     </header>
 

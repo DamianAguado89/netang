@@ -121,6 +121,84 @@ $green-dark: #1b5e20;
       color: rgba(255, 255, 255, 0.5);
     }
   }
+
+  .avatar-btn {
+    width: 36px;
+    height: 36px;
+    padding: 0;
+    overflow: hidden;
+  }
+
+  .login-btn {
+    color: white;
+    border-color: rgba(255, 255, 255, 0.6);
+    font-size: 13px;
+  }
+}
+
+.avatar-img {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  object-fit: cover;
+}
+
+.avatar-initials {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.25);
+  color: white;
+  font-size: 14px;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.user-menu-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 16px 16px 12px;
+  min-width: 240px;
+}
+
+.menu-avatar {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  object-fit: cover;
+  flex-shrink: 0;
+}
+
+.menu-avatar-initials {
+  width: 48px;
+  height: 48px;
+  border-radius: 50%;
+  background: $green;
+  color: white;
+  font-size: 18px;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.menu-user-info {
+  display: flex;
+  flex-direction: column;
+}
+
+.menu-user-name {
+  font-weight: 600;
+  font-size: 14px;
+}
+
+.menu-user-email {
+  font-size: 12px;
+  color: #666;
 }
 
 .category-filter {

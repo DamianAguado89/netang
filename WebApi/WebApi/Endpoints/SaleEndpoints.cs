@@ -16,7 +16,7 @@ public static class SaleEndpoints
     // /{id}/confirm es una acción de transición de estado, no un CRUD estándar.
     public static void MapSaleEndpoints(this WebApplication app)
     {
-        var group = app.MapGroup("/api/sales").WithTags("Sales");
+        var group = app.MapGroup("/api/sales").WithTags("Sales").RequireAuthorization("AdminPolicy");
 
         group.MapGet("/", GetAllSales);
         group.MapGet("/week", GetSalesByWeek);

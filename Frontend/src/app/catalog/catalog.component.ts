@@ -13,8 +13,12 @@ import { MatChipsModule } from '@angular/material/chips';
 import { MatDialog } from '@angular/material/dialog';
 import { MatDividerModule } from '@angular/material/divider';
 import { MatIconModule } from '@angular/material/icon';
+import { MatMenuModule } from '@angular/material/menu';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatSidenavModule } from '@angular/material/sidenav';
+
+import { AuthService } from '@app/auth/auth.service';
+import { ProfileService } from '@app/auth/profile.service';
 import { CatalogService } from '@app/catalog/catalog.service';
 import { CartComponent } from '@app/catalog/cart/cart.component';
 import { OrderDialogComponent } from '@app/catalog/order-dialog/order-dialog.component';
@@ -43,6 +47,7 @@ import { ProductCardComponent } from '@app/catalog/product-card/product-card.com
     MatChipsModule,
     MatDividerModule,
     MatIconModule,
+    MatMenuModule,
     MatProgressSpinnerModule,
     MatSidenavModule,
     ProductCardComponent,
@@ -57,6 +62,12 @@ export class CatalogComponent implements OnInit {
    * pueda acceder directamente a sus signals (p. ej. `catalogService.loading()`).
    */
   readonly catalogService = inject(CatalogService);
+
+  /** Servicio de autenticación, accedido desde la plantilla para mostrar/ocultar el avatar. */
+  readonly authService = inject(AuthService);
+
+  /** Servicio de perfil, accedido desde la plantilla para obtener la imagen del avatar. */
+  readonly profileService = inject(ProfileService);
 
   /** Servicio de Material para abrir dialogs de forma imperativa. */
   private readonly dialog = inject(MatDialog);
@@ -93,6 +104,30 @@ export class CatalogComponent implements OnInit {
     const cat = this.selectedCategory();
     if (!cat) return this.catalogService.products();
     return this.catalogService.products().filter((p) => p.categoryName === cat);
+  });
+
+  /**
+   * Iniciales del nombre completo del usuario autenticado (máximo dos palabras).
+   * Usado como fallback cuando no hay imagen de avatar.
+   */
+  readonly initials = computed(() => {
+    const n = this.authService.currentUser()?.fullName ?? '?';
+    return n
+      .split(' ')
+      .slice(0, 2)
+      .map((w) => w[0])
+      .join('')
+      .toUpperCase();
+  });
+
+  /**
+   * URL absoluta de la imagen de avatar del usuario.
+   * Combina la base de la API (sin el segmento `/api`) con la ruta relativa devuelta
+   * por el backend. Devuelve `null` si el perfil no tiene imagen.
+   */
+  readonly avatarUrl = computed(() => {
+    const url = this.profileService.profile()?.imageUrl;
+    return url ? this.profileService.baseUrl() + url : null;
   });
 
   /**
@@ -146,5 +181,12 @@ export class CatalogComponent implements OnInit {
    */
   closeNav(): void {
     this.navOpen.set(false);
+  }
+
+  /**
+   * Cierra la sesión del usuario y redirige al login.
+   */
+  logout(): void {
+    this.authService.logout();
   }
 }

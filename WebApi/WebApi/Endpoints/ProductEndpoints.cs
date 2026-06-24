@@ -16,11 +16,13 @@ public static class ProductEndpoints
     // multipart/form-data, que no puede incluir el token antifalsificación estándar.
     public static void MapProductEndpoints(this WebApplication app)
     {
-        var group = app.MapGroup("/api/products").WithTags("Products");
+        var group = app.MapGroup("/api/products").WithTags("Products").RequireAuthorization("AdminPolicy");
 
         group.MapGet("/", GetAllProducts);
         group.MapGet("/{id:int}", GetProduct);
-        group.MapGet("/{id:int}/image", GetProductImage);
+        // Anónima porque el catálogo público (sin login) también renderiza esta URL en un <img>,
+        // y el navegador no puede adjuntar el JWT en una petición de recurso como esa.
+        group.MapGet("/{id:int}/image", GetProductImage).AllowAnonymous();
         group.MapPost("/", CreateProduct);
         group.MapPost("/{id:int}/image", UploadProductImage).DisableAntiforgery();
         group.MapPut("/{id:int}", UpdateProduct);

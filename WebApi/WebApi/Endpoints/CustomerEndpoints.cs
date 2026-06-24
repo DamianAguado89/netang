@@ -9,10 +9,12 @@ public static class CustomerEndpoints
 {
     public static void MapCustomerEndpoints(this WebApplication app)
     {
-        var group = app.MapGroup("/api/customers").WithTags("Customers");
+        var group = app.MapGroup("/api/customers").WithTags("Customers").RequireAuthorization("AdminPolicy");
 
         group.MapGet("/", GetAllCustomers);
         group.MapGet("/{id:int}", GetCustomer);
+        // Anónima: la imagen se carga desde <img src="...">, el navegador no puede adjuntar JWT.
+        group.MapGet("/{id:int}/image", GetCustomerImage).AllowAnonymous();
         group.MapPost("/", CreateCustomer);
         group.MapPut("/{id:int}", UpdateCustomer);
         group.MapDelete("/{id:int}", DeleteCustomer);
@@ -21,7 +23,8 @@ public static class CustomerEndpoints
     private static async Task<IResult> GetAllCustomers(ApplicationDbContext db)
     {
         var list = await db.Customers
-            .Select(c => new CustomerDto(c.Id, c.Name, c.Email, c.Phone, c.Address))
+            .Select(c => new CustomerDto(c.Id, c.Name, c.Email, c.Phone, c.Address,
+                c.ImageData != null ? $"/api/customers/{c.Id}/image" : null))
             .ToListAsync();
         return TypedResults.Ok(list);
     }
@@ -30,8 +33,16 @@ public static class CustomerEndpoints
     {
         var c = await db.Customers.FindAsync(id);
         return c is not null
-            ? TypedResults.Ok(new CustomerDto(c.Id, c.Name, c.Email, c.Phone, c.Address))
+            ? TypedResults.Ok(new CustomerDto(c.Id, c.Name, c.Email, c.Phone, c.Address,
+                c.ImageData != null ? $"/api/customers/{c.Id}/image" : null))
             : TypedResults.NotFound();
+    }
+
+    private static async Task<IResult> GetCustomerImage(int id, ApplicationDbContext db)
+    {
+        var c = await db.Customers.FindAsync(id);
+        if (c is null || c.ImageData is null) return TypedResults.NotFound();
+        return TypedResults.File(c.ImageData, c.ImageContentType ?? "image/jpeg");
     }
 
     private static async Task<IResult> CreateCustomer(CreateCustomerRequest req, ApplicationDbContext db)
@@ -46,7 +57,7 @@ public static class CustomerEndpoints
         db.Customers.Add(customer);
         await db.SaveChangesAsync();
         return TypedResults.Created($"/api/customers/{customer.Id}",
-            new CustomerDto(customer.Id, customer.Name, customer.Email, customer.Phone, customer.Address));
+            new CustomerDto(customer.Id, customer.Name, customer.Email, customer.Phone, customer.Address, null));
     }
 
     private static async Task<IResult> UpdateCustomer(int id, UpdateCustomerRequest req, ApplicationDbContext db)

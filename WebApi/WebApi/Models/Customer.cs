@@ -28,5 +28,15 @@ public class Customer
     [Display(Name = "Address")]
     public string? Address { get; set; }
 
+    // Vincula este Customer con el ApplicationUser que creó la cuenta.
+    // Null para customers creados por el admin antes de que existiera auth.
+    [StringLength(450)]
+    public string? UserId { get; set; }
+
+    public byte[]? ImageData { get; set; }
+
+    [StringLength(100)]
+    public string? ImageContentType { get; set; }
+
     public ICollection<Sale> Sales { get; set; } = new List<Sale>();
 }

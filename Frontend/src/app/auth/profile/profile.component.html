@@ -1,0 +1,108 @@
+<div class="profile-page container py-4">
+  <div class="row justify-content-center">
+    <div class="col-12 col-md-8 col-lg-6">
+
+      <div class="mb-3">
+        <button mat-button routerLink="/" class="back-btn">
+          <mat-icon>arrow_back</mat-icon>
+          Volver al catálogo
+        </button>
+      </div>
+
+      <mat-card class="profile-card">
+        <mat-card-header>
+          <mat-card-title>Mi perfil</mat-card-title>
+          <mat-card-subtitle>Gestioná tus datos de contacto y entrega</mat-card-subtitle>
+        </mat-card-header>
+
+        @if (saving() || uploadingImage()) {
+          <mat-progress-bar mode="indeterminate" />
+        }
+
+        <mat-card-content class="pt-3">
+
+          <!-- Avatar -->
+          <div class="avatar-section d-flex flex-column align-items-center mb-4">
+            @if (avatarUrl()) {
+              <img [src]="avatarUrl()" class="profile-avatar" [alt]="authService.currentUser()?.fullName" />
+            } @else {
+              <div class="profile-avatar-initials">{{ initials() }}</div>
+            }
+            <label class="mt-2">
+              <input
+                type="file"
+                accept="image/*"
+                class="d-none"
+                (change)="onAvatarSelected($event)"
+              />
+              <button
+                mat-stroked-button
+                type="button"
+                [disabled]="uploadingImage()"
+                onclick="this.previousElementSibling.click()"
+                class="mt-2"
+              >
+                <mat-icon>photo_camera</mat-icon>
+                Cambiar foto
+              </button>
+            </label>
+          </div>
+
+          <mat-divider class="mb-4" />
+
+          <!-- Formulario -->
+          <form [formGroup]="form" (ngSubmit)="save()" class="d-flex flex-column gap-3">
+
+            <!-- Email (solo lectura) -->
+            <mat-form-field appearance="outline" class="w-100">
+              <mat-label>Email</mat-label>
+              <input matInput [value]="authService.currentUser()?.email ?? ''" readonly />
+              <mat-icon matSuffix>lock</mat-icon>
+            </mat-form-field>
+
+            <!-- Nombre -->
+            <mat-form-field appearance="outline" class="w-100">
+              <mat-label>Nombre completo</mat-label>
+              <input matInput formControlName="name" autocomplete="name" />
+              @if (form.get('name')?.invalid && form.get('name')?.touched) {
+                <mat-error>El nombre es requerido (mínimo 2 caracteres).</mat-error>
+              }
+            </mat-form-field>
+
+            <!-- Teléfono -->
+            <mat-form-field appearance="outline" class="w-100">
+              <mat-label>Teléfono</mat-label>
+              <input matInput formControlName="phone" type="tel" autocomplete="tel" />
+            </mat-form-field>
+
+            <!-- Dirección -->
+            <mat-form-field appearance="outline" class="w-100">
+              <mat-label>Dirección de entrega</mat-label>
+              <input matInput formControlName="address" autocomplete="street-address" />
+            </mat-form-field>
+
+            @if (successMessage()) {
+              <div class="alert-success-msg">{{ successMessage() }}</div>
+            }
+            @if (errorMessage()) {
+              <div class="alert-error-msg">{{ errorMessage() }}</div>
+            }
+
+            <button
+              mat-raised-button
+              color="primary"
+              type="submit"
+              [disabled]="form.invalid || saving()"
+            >
+              <mat-icon>save</mat-icon>
+              Guardar cambios
+            </button>
+
+          </form>
+
+        </mat-card-content>
+      </mat-card>
+
+    </div>
+  </div>
+</div>

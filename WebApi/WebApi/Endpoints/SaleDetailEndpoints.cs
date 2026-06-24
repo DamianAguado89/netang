@@ -13,7 +13,7 @@ public static class SaleDetailEndpoints
     // Registra las cinco rutas estándar bajo /api/saledetails.
     public static void MapSaleDetailEndpoints(this WebApplication app)
     {
-        var group = app.MapGroup("/api/saledetails").WithTags("Sale Details");
+        var group = app.MapGroup("/api/saledetails").WithTags("Sale Details").RequireAuthorization("AdminPolicy");
 
         group.MapGet("/", GetAllDetails);
         group.MapGet("/{id:int}", GetDetail);

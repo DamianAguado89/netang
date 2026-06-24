@@ -15,7 +15,7 @@ public static class CategoryEndpoints
     // No hay ruta de imagen porque las categorías no tienen imagen propia.
     public static void MapCategoryEndpoints(this WebApplication app)
     {
-        var group = app.MapGroup("/api/categories").WithTags("Categories");
+        var group = app.MapGroup("/api/categories").WithTags("Categories").RequireAuthorization("AdminPolicy");
 
         group.MapGet("/", GetAllCategories);
         group.MapGet("/{id:int}", GetCategory);
