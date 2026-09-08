@@ -4,8 +4,26 @@ import { MatButtonModule } from '@angular/material/button';
 import { MatCardModule } from '@angular/material/card';
 import { MatChipsModule } from '@angular/material/chips';
 import { MatIconModule } from '@angular/material/icon';
+import { MatTooltipModule } from '@angular/material/tooltip';
 import { CatalogProduct } from '@app/models/catalog.model';
 import { environment } from '@env/environment';
+
+/**
+ * @description
+ * Bloquea en el `keydown` cualquier tecla que no sea un dígito o una tecla de
+ * control (borrar, flechas, tab, copiar/pegar, etc.), para que el input de
+ * gramos no permita escribir letras ni el signo negativo directamente —
+ * mismo criterio que el campo Cantidad del POS admin.
+ *
+ * @param event Evento de teclado del input.
+ */
+function guardQuantityKey(event: KeyboardEvent): void {
+  if (event.ctrlKey || event.metaKey || event.altKey) return;
+  const controlKeys = ['Backspace', 'Delete', 'ArrowLeft', 'ArrowRight', 'ArrowUp', 'ArrowDown', 'Tab', 'Home', 'End'];
+  if (controlKeys.includes(event.key)) return;
+  if (/^\d$/.test(event.key)) return;
+  event.preventDefault();
+}
 
 /**
  * @description
@@ -24,7 +42,14 @@ import { environment } from '@env/environment';
   selector: 'app-product-card',
   standalone: true,
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [DecimalPipe, MatCardModule, MatButtonModule, MatIconModule, MatChipsModule],
+  imports: [
+    DecimalPipe,
+    MatCardModule,
+    MatButtonModule,
+    MatIconModule,
+    MatChipsModule,
+    MatTooltipModule,
+  ],
   templateUrl: './product-card.component.html',
   styleUrl: './product-card.component.scss',
 })
@@ -64,6 +89,31 @@ export class ProductCardComponent {
    * necesite conocerla.
    */
   readonly changeQty = output<number>();
+
+  /**
+   * Emitido con la cantidad absoluta (en gramos) cuando el usuario tipea directamente
+   * en el input de un producto que se vende por peso, en vez de usar los botones +/-.
+   * A diferencia de `changeQty`, este valor reemplaza la cantidad actual en lugar de
+   * sumarle un delta.
+   */
+  readonly setQty = output<number>();
+
+  /** Bloquea teclas no numéricas en el input de gramos (ver `guardQuantityKey`). */
+  readonly guardQuantityKey = guardQuantityKey;
+
+  /**
+   * @description Parsea el texto crudo del input de gramos y lo reenvía como `setQty`.
+   * Un valor vacío o inválido no emite nada — el padre simplemente no actualiza la
+   * cantidad hasta que el cliente termine de escribir un número válido, igual que en
+   * el campo Cantidad del POS admin (así no se pierde la línea del carrito al borrar).
+   * @param event Evento `input` del campo de texto.
+   */
+  onQuantityInput(event: Event): void {
+    const rawValue = (event.target as HTMLInputElement).value;
+    const quantity = parseInt(rawValue, 10);
+    if (!Number.isFinite(quantity) || quantity < 1) return;
+    this.setQty.emit(quantity);
+  }
 
   /**
    * URL absoluta de la imagen del producto, o `null` si el producto no tiene imagen.

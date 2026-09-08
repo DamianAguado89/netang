@@ -52,6 +52,8 @@ public class ApplicationDbContext : IdentityDbContext<ApplicationUser>
 
         // Precision for decimals (redundant with [Column], but explicit here)
         modelBuilder.Entity<Product>().Property(p => p.Price).HasColumnType("decimal(18,2)");
+        modelBuilder.Entity<Product>().Property(p => p.ListPrice).HasColumnType("decimal(18,2)");
+        modelBuilder.Entity<Product>().Property(p => p.MarkupPercentage).HasColumnType("decimal(9,4)");
         modelBuilder.Entity<Sale>().Property(s => s.Total).HasColumnType("decimal(18,2)");
         modelBuilder.Entity<SaleDetail>().Property(sd => sd.Price).HasColumnType("decimal(18,2)");
         modelBuilder.Entity<SaleDetail>().Property(sd => sd.Total).HasColumnType("decimal(18,2)");

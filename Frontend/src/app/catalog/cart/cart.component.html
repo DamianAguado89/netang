@@ -10,21 +10,29 @@
     <div class="cart-item">
       <div class="item-info">
         <span class="item-name">{{ item.product.name }}</span>
-        <span class="item-price">${{ item.product.price | number:'1.0-0' }}</span>
+        <span class="item-price">${{ item.product.price | number:'1.0-0' }}{{ item.product.soldByWeight ? ' /kg' : '' }}</span>
       </div>
       <div class="item-controls">
-        <button mat-icon-button (click)="catalogService.updateQuantity(item.product.id, -1)" aria-label="Quitar uno">
+        <button
+          mat-icon-button
+          (click)="catalogService.updateQuantity(item.product.id, item.product.soldByWeight ? -100 : -1)"
+          aria-label="Quitar"
+        >
           <mat-icon>remove</mat-icon>
         </button>
-        <span class="item-qty">{{ item.quantity }}</span>
-        <button mat-icon-button (click)="catalogService.updateQuantity(item.product.id, 1)" aria-label="Agregar uno">
+        <span class="item-qty">{{ item.quantity }}{{ item.product.soldByWeight ? ' g' : '' }}</span>
+        <button
+          mat-icon-button
+          (click)="catalogService.updateQuantity(item.product.id, item.product.soldByWeight ? 100 : 1)"
+          aria-label="Agregar"
+        >
           <mat-icon>add</mat-icon>
         </button>
         <button mat-icon-button (click)="catalogService.removeFromCart(item.product.id)" aria-label="Eliminar producto">
           <mat-icon>delete_outline</mat-icon>
         </button>
       </div>
-      <span class="item-subtotal">${{ item.product.price * item.quantity | number:'1.0-0' }}</span>
+      <span class="item-subtotal">${{ catalogService.itemTotal(item) | number:'1.0-0' }}</span>
     </div>
     <mat-divider />
   }

@@ -21,3 +21,15 @@ export interface SaleDto {
   confirmedAt: string | null;
   saleDetails: SaleDetailDto[];
 }
+
+export interface SaleDetailRequest {
+  productId: number;
+  quantity: number;
+}
+
+export interface CreateSaleRequest {
+  customerId: number;
+  paymentType: string | null;
+  notes: string | null;
+  saleDetails: SaleDetailRequest[];
+}

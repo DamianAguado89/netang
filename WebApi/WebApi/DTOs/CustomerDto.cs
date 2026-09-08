@@ -1,10 +1,10 @@
 namespace WebApi.DTOs;
 
-public record CustomerDto(int Id, string Name, string? Email, string? Phone, string? Address, string? ImageUrl);
+public record CustomerDto(int Id, string Name, string? Email, string? Phone, string? Address, DateTime? BirthDate, string? ImageUrl);
 
-public record CreateCustomerRequest(string Name, string? Email, string? Phone, string? Address);
+public record CreateCustomerRequest(string Name, string? Email, string? Phone, string? Address, DateTime? BirthDate);
 
-public record UpdateCustomerRequest(string Name, string? Email, string? Phone, string? Address);
+public record UpdateCustomerRequest(string Name, string? Email, string? Phone, string? Address, DateTime? BirthDate);
 
 // Usado por el usuario autenticado para actualizar su propio perfil.
 // Email no se incluye porque está ligado a la cuenta de Identity y no se cambia aquí.

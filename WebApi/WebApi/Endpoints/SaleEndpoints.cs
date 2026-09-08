@@ -75,9 +75,19 @@ public static class SaleEndpoints
         return sale is not null ? TypedResults.Ok(ToDto(sale)) : TypedResults.NotFound();
     }
 
+    // Calcula el importe de una línea de venta. Para productos vendidos por peso,
+    // Price es el precio por kilogramo y Quantity son los gramos cargados en la balanza
+    // (ej: 300g a $20000/kg → $6000). Para el resto, Quantity son unidades y el cálculo
+    // es el de siempre. Se redondea igual que CalculatePrice en ProductEndpoints.
+    private static decimal CalculateLineTotal(Product product, int quantity) =>
+        product.SoldByWeight
+            ? Math.Round(product.Price * quantity / 1000m, 2, MidpointRounding.AwayFromZero)
+            : product.Price * quantity;
+
     // Crea una venta validando el cliente y cada producto antes de persistir.
-    // El total se calcula en el servidor sumando los subtotales de cada ítem —
-    // nunca se acepta el total que envía el cliente para evitar manipulación de precios.
+    // El número de documento y el precio de cada ítem se generan/toman en el servidor
+    // (nunca del cliente) — mismo criterio que OrderEndpoints.PlaceOrder, para que ambos
+    // caminos de creación de venta (público y admin) no puedan ser manipulados.
     // Tras el SaveChanges se cargan las referencias de Customer y SaleDetails+Product
     // para poder construir el DTO completo que se devuelve en el 201 Created.
     private static async Task<IResult> CreateSale(CreateSaleRequest req, ApplicationDbContext db)
@@ -85,10 +95,11 @@ public static class SaleEndpoints
         if (!await db.Customers.AnyAsync(c => c.Id == req.CustomerId))
             return TypedResults.BadRequest($"Customer {req.CustomerId} does not exist.");
 
+        var docNumber = $"DP-{DateTime.UtcNow:yyyyMMddHHmmss}";
         var sale = new Sale
         {
             CustomerId = req.CustomerId,
-            DocumentNumber = req.DocumentNumber,
+            DocumentNumber = docNumber,
             PaymentType = req.PaymentType,
             Notes = req.Notes,
             RegistrationDate = DateTime.UtcNow
@@ -96,15 +107,18 @@ public static class SaleEndpoints
 
         foreach (var item in req.SaleDetails)
         {
-            if (!await db.Products.AnyAsync(p => p.Id == item.ProductId))
-                return TypedResults.BadRequest($"Product {item.ProductId} does not exist.");
+            var product = await db.Products.FindAsync(item.ProductId);
+            if (product is null || !product.IsActive)
+                return TypedResults.BadRequest($"Producto {item.ProductId} no disponible.");
+            if (item.Quantity <= 0)
+                return TypedResults.BadRequest($"Cantidad inválida para el producto {product.Name}.");
 
             sale.SaleDetails.Add(new SaleDetail
             {
-                ProductId = item.ProductId,
+                ProductId = product.Id,
                 Quantity = item.Quantity,
-                Price = item.Price,
-                Total = item.Price * item.Quantity
+                Price = product.Price,
+                Total = CalculateLineTotal(product, item.Quantity)
             });
         }
 
@@ -123,8 +137,9 @@ public static class SaleEndpoints
     // RemoveRange elimina todos los ítems existentes antes de agregar los nuevos,
     // evitando la complejidad de un diff ítem por ítem con los mismos datos del request.
     // Reutiliza CreateSaleRequest porque la estructura de creación y actualización es idéntica.
+    // El número de documento no se toca — es inmutable una vez creada la venta.
     // Recalcula el total desde los nuevos ítems antes de persistir.
-    // Devuelve 404 si la venta no existe, 400 si cliente o algún producto no existen, 204 si fue exitoso.
+    // Devuelve 404 si la venta no existe, 400 si cliente o algún producto no existen/inactivos, 204 si fue exitoso.
     private static async Task<IResult> UpdateSale(int id, CreateSaleRequest req, ApplicationDbContext db)
     {
         var sale = await db.Sales.Include(s => s.SaleDetails).FirstOrDefaultAsync(s => s.Id == id);
@@ -133,7 +148,6 @@ public static class SaleEndpoints
         if (!await db.Customers.AnyAsync(c => c.Id == req.CustomerId))
             return TypedResults.BadRequest($"Customer {req.CustomerId} does not exist.");
 
-        sale.DocumentNumber = req.DocumentNumber;
         sale.PaymentType = req.PaymentType;
         sale.Notes = req.Notes;
         sale.CustomerId = req.CustomerId;
@@ -142,16 +156,19 @@ public static class SaleEndpoints
 
         foreach (var item in req.SaleDetails)
         {
-            if (!await db.Products.AnyAsync(p => p.Id == item.ProductId))
-                return TypedResults.BadRequest($"Product {item.ProductId} does not exist.");
+            var product = await db.Products.FindAsync(item.ProductId);
+            if (product is null || !product.IsActive)
+                return TypedResults.BadRequest($"Producto {item.ProductId} no disponible.");
+            if (item.Quantity <= 0)
+                return TypedResults.BadRequest($"Cantidad inválida para el producto {product.Name}.");
 
             sale.SaleDetails.Add(new SaleDetail
             {
                 SaleId = sale.Id,
-                ProductId = item.ProductId,
+                ProductId = product.Id,
                 Quantity = item.Quantity,
-                Price = item.Price,
-                Total = item.Price * item.Quantity
+                Price = product.Price,
+                Total = CalculateLineTotal(product, item.Quantity)
             });
         }
 

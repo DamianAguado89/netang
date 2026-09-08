@@ -34,7 +34,8 @@ public static class CatalogEndpoints
             .Select(p => new ProductDto(
                 p.Id, p.Name, p.Description,
                 p.ImageData != null ? $"/api/products/{p.Id}/image" : null,
-                p.Price, p.Stock, p.IsActive, p.CategoryId, p.Category!.Name, p.RegistrationDate))
+                p.Price, p.ListPrice, p.MarkupPercentage,
+                p.Stock, p.SoldByWeight, p.IsActive, p.CategoryId, p.Category!.Name, p.RegistrationDate))
             .ToListAsync();
         return TypedResults.Ok(products);
     }
@@ -53,7 +54,8 @@ public static class CatalogEndpoints
             ? TypedResults.Ok(new ProductDto(
                 p.Id, p.Name, p.Description,
                 p.ImageData != null ? $"/api/products/{p.Id}/image" : null,
-                p.Price, p.Stock, p.IsActive, p.CategoryId, p.Category!.Name, p.RegistrationDate))
+                p.Price, p.ListPrice, p.MarkupPercentage,
+                p.Stock, p.SoldByWeight, p.IsActive, p.CategoryId, p.Category!.Name, p.RegistrationDate))
             : TypedResults.NotFound();
     }
 }

@@ -28,6 +28,10 @@ public class Customer
     [Display(Name = "Address")]
     public string? Address { get; set; }
 
+    [DataType(DataType.Date)]
+    [Display(Name = "BirthDate")]
+    public DateTime? BirthDate { get; set; }
+
     // Vincula este Customer con el ApplicationUser que creó la cuenta.
     // Null para customers creados por el admin antes de que existiera auth.
     [StringLength(450)]

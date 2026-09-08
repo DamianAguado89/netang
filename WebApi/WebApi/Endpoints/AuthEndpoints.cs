@@ -22,7 +22,30 @@ public static class AuthEndpoints
         group.MapPost("/google", GoogleLogin);
     }
 
-    // Crea cuenta nueva con rol Customer por defecto.
+    // Si el email coincide con SuperAdminSeed:Email, promueve al usuario al rol
+    // SuperAdmin (reemplazando cualquier otro rol que tuviera). Se llama en cada
+    // login/registro en lugar de una sola vez al arrancar: así el control de quién
+    // es super admin vive únicamente en la configuración (no en un flag de la base
+    // que alguien podría manipular vía la API de roles), y si esa cuenta llega a
+    // perder el rol por algún error, se auto-repara en el siguiente login.
+    private static async Task PromoteSuperAdminIfConfigured(
+        ApplicationUser user, UserManager<ApplicationUser> userManager, IConfiguration config)
+    {
+        var superAdminEmail = config["SuperAdminSeed:Email"];
+        if (superAdminEmail is null || !string.Equals(user.Email, superAdminEmail, StringComparison.OrdinalIgnoreCase))
+            return;
+
+        if (await userManager.IsInRoleAsync(user, "SuperAdmin")) return;
+
+        var currentRoles = await userManager.GetRolesAsync(user);
+        if (currentRoles.Count > 0)
+            await userManager.RemoveFromRolesAsync(user, currentRoles);
+        await userManager.AddToRoleAsync(user, "SuperAdmin");
+    }
+
+    // Crea cuenta nueva con rol Customer por defecto (o SuperAdmin si el email
+    // coincide con SuperAdminSeed:Email — cubre el caso de que el super admin
+    // decida registrarse con email/password en vez de Google).
     // Identity valida la fortaleza del password (min 8 chars, 1 dígito, 1 mayúscula).
     // Devuelve 400 con los mensajes de error de Identity si el email ya existe o el password es débil.
     // También crea el registro Customer vinculado por UserId para que /api/profile funcione de inmediato.
@@ -30,7 +53,8 @@ public static class AuthEndpoints
         RegisterRequest req,
         UserManager<ApplicationUser> userManager,
         ApplicationDbContext db,
-        TokenService tokenService)
+        TokenService tokenService,
+        IConfiguration config)
     {
         var user = new ApplicationUser
         {
@@ -44,6 +68,7 @@ public static class AuthEndpoints
             return TypedResults.BadRequest(result.Errors.Select(e => e.Description));
 
         await userManager.AddToRoleAsync(user, "Customer");
+        await PromoteSuperAdminIfConfigured(user, userManager, config);
 
         // Crea el Customer vinculado si no existe ya uno con ese email (evita duplicados).
         if (!await db.Customers.AnyAsync(c => c.UserId == user.Id))
@@ -57,8 +82,10 @@ public static class AuthEndpoints
             await db.SaveChangesAsync();
         }
 
-        var token = tokenService.GenerateToken(user, "Customer");
-        return TypedResults.Ok(new AuthResponse(token, user.Email!, user.FullName, "Customer"));
+        var roles = await userManager.GetRolesAsync(user);
+        var role = roles.FirstOrDefault() ?? "Customer";
+        var token = tokenService.GenerateToken(user, role);
+        return TypedResults.Ok(new AuthResponse(token, user.Email!, user.FullName, role));
     }
 
     // Autentica con email y password. Usa CheckPasswordAsync en lugar de SignInManager
@@ -68,11 +95,14 @@ public static class AuthEndpoints
     private static async Task<IResult> Login(
         LoginRequest req,
         UserManager<ApplicationUser> userManager,
-        TokenService tokenService)
+        TokenService tokenService,
+        IConfiguration config)
     {
         var user = await userManager.FindByEmailAsync(req.Email);
         if (user is null || !await userManager.CheckPasswordAsync(user, req.Password))
             return TypedResults.Unauthorized();
+
+        await PromoteSuperAdminIfConfigured(user, userManager, config);
 
         var roles = await userManager.GetRolesAsync(user);
         var role = roles.FirstOrDefault() ?? "Customer";
@@ -132,6 +162,8 @@ public static class AuthEndpoints
                 await db.SaveChangesAsync();
             }
         }
+
+        await PromoteSuperAdminIfConfigured(user, userManager, config);
 
         var roles = await userManager.GetRolesAsync(user);
         var role = roles.FirstOrDefault() ?? "Customer";

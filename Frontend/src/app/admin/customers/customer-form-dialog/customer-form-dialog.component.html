@@ -1,0 +1,52 @@
+<h2 mat-dialog-title>
+  <mat-icon class="dialog-title-icon">person_add</mat-icon>
+  Nuevo Cliente
+</h2>
+
+<mat-dialog-content>
+  @if (saveError()) {
+    <div class="save-error mb-3" role="alert">
+      <mat-icon>error_outline</mat-icon>
+      {{ saveError() }}
+    </div>
+  }
+
+  <form [formGroup]="form" (ngSubmit)="save()" class="form-grid">
+
+    <mat-form-field appearance="outline" class="full-width">
+      <mat-label>Razón Social *</mat-label>
+      <input matInput formControlName="name" placeholder="Ej: María González" autocomplete="off" />
+      @if (form.controls.name.invalid && form.controls.name.touched) {
+        <mat-error>La razón social es obligatoria (máx. 150 caracteres).</mat-error>
+      }
+    </mat-form-field>
+
+    <mat-form-field appearance="outline" class="full-width">
+      <mat-label>Dirección</mat-label>
+      <input matInput formControlName="address" placeholder="Ej: San Martín 450" autocomplete="off" />
+    </mat-form-field>
+
+    <mat-form-field appearance="outline" class="full-width">
+      <mat-label>Teléfono</mat-label>
+      <input matInput formControlName="phone" type="tel" placeholder="Ej: 3571 123456" autocomplete="off" />
+    </mat-form-field>
+
+    <mat-form-field appearance="outline" class="full-width">
+      <mat-label>Fecha de Cumpleaños</mat-label>
+      <input matInput formControlName="birthDate" [matDatepicker]="birthPicker" />
+      <mat-datepicker-toggle matIconSuffix [for]="birthPicker" />
+      <mat-datepicker #birthPicker />
+    </mat-form-field>
+
+  </form>
+</mat-dialog-content>
+
+<mat-dialog-actions align="end">
+  <button mat-button type="button" (click)="cancel()" [disabled]="saving()">Cancelar</button>
+  <button mat-raised-button color="primary" type="button" (click)="save()" [disabled]="saving()">
+    @if (saving()) {
+      <mat-spinner diameter="18" class="btn-spinner"></mat-spinner>
+    }
+    {{ saving() ? 'Guardando...' : 'Guardar' }}
+  </button>
+</mat-dialog-actions>

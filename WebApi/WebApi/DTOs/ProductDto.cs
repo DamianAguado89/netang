@@ -6,7 +6,10 @@ public record ProductDto(
     string? Description,
     string? ImageUrl,
     decimal Price,
+    decimal? ListPrice,
+    decimal? MarkupPercentage,
     int Stock,
+    bool SoldByWeight,
     bool IsActive,
     int CategoryId,
     string CategoryName,
@@ -16,8 +19,10 @@ public record ProductDto(
 public record CreateProductRequest(
     string Name,
     string? Description,
-    decimal Price,
+    decimal ListPrice,
+    decimal MarkupPercentage,
     int Stock,
+    bool SoldByWeight,
     bool IsActive,
     int CategoryId
 );
@@ -25,8 +30,10 @@ public record CreateProductRequest(
 public record UpdateProductRequest(
     string Name,
     string? Description,
-    decimal Price,
+    decimal ListPrice,
+    decimal MarkupPercentage,
     int Stock,
+    bool SoldByWeight,
     bool IsActive,
     int CategoryId
 );

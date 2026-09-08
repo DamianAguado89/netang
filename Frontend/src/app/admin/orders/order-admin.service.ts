@@ -2,7 +2,7 @@ import { Injectable, inject, signal } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { environment } from '@env/environment';
-import { SaleDto } from '@app/models/order.model';
+import { CreateSaleRequest, SaleDto } from '@app/models/order.model';
 
 /**
  * @description
@@ -79,5 +79,23 @@ export class OrderAdminService {
    */
   confirmOrder(id: number): Observable<void> {
     return this.http.post<void>(`${this.api}/sales/${id}/confirm`, {});
+  }
+
+  /**
+   * @description
+   * Registra una venta nueva en el backend a partir del cliente y los ítems del carrito.
+   *
+   * El payload no incluye precios ni número de comprobante: ambos los calcula el backend
+   * a partir del producto y del correlativo de facturación, de modo que el frontend no
+   * pueda alterar el importe de la venta.
+   *
+   * Devuelve el Observable sin suscribirse para que el componente controle la navegación
+   * al comprobante usando el `id` de la venta recién creada.
+   *
+   * @param body Cliente, forma de pago, notas y detalle de productos con sus cantidades.
+   * @returns Observable que emite el `SaleDto` completo de la venta creada.
+   */
+  createSale(body: CreateSaleRequest): Observable<SaleDto> {
+    return this.http.post<SaleDto>(`${this.api}/sales`, body);
   }
 }

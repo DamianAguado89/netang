@@ -65,9 +65,15 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
         };
     });
 
-// AdminPolicy requiere rol "Admin" — evaluado desde el claim del JWT sin consultar la DB.
+// AdminPolicy acepta "Admin" o "SuperAdmin" — el super admin puede hacer todo lo que
+// un admin puede, además de administrar roles. SuperAdminPolicy es más estricta:
+// solo para /api/users (ver UserEndpoints), donde se otorga/revoca el rol Admin.
+// Ambas se evalúan desde el claim del JWT, sin consultar la base.
 builder.Services.AddAuthorization(options =>
-    options.AddPolicy("AdminPolicy", policy => policy.RequireRole("Admin")));
+{
+    options.AddPolicy("AdminPolicy", policy => policy.RequireRole("Admin", "SuperAdmin"));
+    options.AddPolicy("SuperAdminPolicy", policy => policy.RequireRole("SuperAdmin"));
+});
 
 builder.Services.AddScoped<TokenService>();
 
@@ -92,7 +98,7 @@ using (var scope = app.Services.CreateScope())
     var roleManager = scope.ServiceProvider.GetRequiredService<RoleManager<IdentityRole>>();
     var userManager = scope.ServiceProvider.GetRequiredService<UserManager<ApplicationUser>>();
 
-    foreach (var role in new[] { "Admin", "Customer" })
+    foreach (var role in new[] { "Admin", "Customer", "SuperAdmin" })
         if (!await roleManager.RoleExistsAsync(role))
             await roleManager.CreateAsync(new IdentityRole(role));
 
@@ -137,6 +143,9 @@ app.MapProductEndpoints();
 app.MapCustomerEndpoints();
 app.MapSaleEndpoints();
 app.MapSaleDetailEndpoints();
+
+// Administración de usuarios y roles (protegido con SuperAdminPolicy)
+app.MapUserEndpoints();
 
 // Public endpoints (storefront)
 app.MapCatalogEndpoints();

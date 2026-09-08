@@ -33,7 +33,7 @@ public static class ProfileEndpoints
         if (c is null) return TypedResults.NotFound();
 
         return TypedResults.Ok(new CustomerDto(
-            c.Id, c.Name, c.Email, c.Phone, c.Address,
+            c.Id, c.Name, c.Email, c.Phone, c.Address, c.BirthDate,
             c.ImageData != null ? $"/api/customers/{c.Id}/image" : null));
     }
 
@@ -57,7 +57,7 @@ public static class ProfileEndpoints
         await db.SaveChangesAsync();
 
         return TypedResults.Ok(new CustomerDto(
-            c.Id, c.Name, c.Email, c.Phone, c.Address,
+            c.Id, c.Name, c.Email, c.Phone, c.Address, c.BirthDate,
             c.ImageData != null ? $"/api/customers/{c.Id}/image" : null));
     }
 

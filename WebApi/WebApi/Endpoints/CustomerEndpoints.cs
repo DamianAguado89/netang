@@ -23,7 +23,7 @@ public static class CustomerEndpoints
     private static async Task<IResult> GetAllCustomers(ApplicationDbContext db)
     {
         var list = await db.Customers
-            .Select(c => new CustomerDto(c.Id, c.Name, c.Email, c.Phone, c.Address,
+            .Select(c => new CustomerDto(c.Id, c.Name, c.Email, c.Phone, c.Address, c.BirthDate,
                 c.ImageData != null ? $"/api/customers/{c.Id}/image" : null))
             .ToListAsync();
         return TypedResults.Ok(list);
@@ -33,7 +33,7 @@ public static class CustomerEndpoints
     {
         var c = await db.Customers.FindAsync(id);
         return c is not null
-            ? TypedResults.Ok(new CustomerDto(c.Id, c.Name, c.Email, c.Phone, c.Address,
+            ? TypedResults.Ok(new CustomerDto(c.Id, c.Name, c.Email, c.Phone, c.Address, c.BirthDate,
                 c.ImageData != null ? $"/api/customers/{c.Id}/image" : null))
             : TypedResults.NotFound();
     }
@@ -52,12 +52,13 @@ public static class CustomerEndpoints
             Name = req.Name,
             Email = req.Email,
             Phone = req.Phone,
-            Address = req.Address
+            Address = req.Address,
+            BirthDate = req.BirthDate
         };
         db.Customers.Add(customer);
         await db.SaveChangesAsync();
         return TypedResults.Created($"/api/customers/{customer.Id}",
-            new CustomerDto(customer.Id, customer.Name, customer.Email, customer.Phone, customer.Address, null));
+            new CustomerDto(customer.Id, customer.Name, customer.Email, customer.Phone, customer.Address, customer.BirthDate, null));
     }
 
     private static async Task<IResult> UpdateCustomer(int id, UpdateCustomerRequest req, ApplicationDbContext db)
@@ -69,6 +70,7 @@ public static class CustomerEndpoints
         customer.Email = req.Email;
         customer.Phone = req.Phone;
         customer.Address = req.Address;
+        customer.BirthDate = req.BirthDate;
 
         await db.SaveChangesAsync();
         return TypedResults.NoContent();

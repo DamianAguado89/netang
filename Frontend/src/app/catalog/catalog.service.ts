@@ -7,6 +7,7 @@ import {
   CatalogProduct,
   PlaceOrderRequest,
   PlaceOrderResponse,
+  catalogItemTotal,
 } from '@app/models/catalog.model';
 
 /**
@@ -54,19 +55,21 @@ export class CatalogService {
   readonly cart = this._cart.asReadonly();
 
   /**
-   * Cantidad total de unidades en el carrito (suma de todas las `quantity`).
-   * Usado para mostrar el badge sobre el ícono del carrito.
+   * Cantidad total de "productos" en el carrito, usada para el badge sobre el
+   * ícono del carrito. Para productos por unidad suma `quantity` (unidades);
+   * para productos por peso cada línea cuenta como 1, sin importar los gramos
+   * cargados — 500g de Garrapiñada son una sola bolsa, no 500 productos.
    */
   readonly cartCount = computed(() =>
-    this._cart().reduce((sum, item) => sum + item.quantity, 0)
+    this._cart().reduce((sum, item) => sum + (item.product.soldByWeight ? 1 : item.quantity), 0)
   );
 
   /**
-   * Importe total del carrito en pesos, calculado como la suma de
-   * `precio × cantidad` de cada ítem.
+   * Importe total del carrito en pesos, sumando el importe de cada ítem
+   * (ver `catalogItemTotal` para el detalle del cálculo por peso vs. por unidad).
    */
   readonly cartTotal = computed(() =>
-    this._cart().reduce((sum, item) => sum + item.product.price * item.quantity, 0)
+    this._cart().reduce((sum, item) => sum + catalogItemTotal(item.product, item.quantity), 0)
   );
 
   /**
@@ -105,20 +108,26 @@ export class CatalogService {
 
   /**
    * @description
-   * Agrega un producto al carrito. Si el producto ya existe, incrementa su
-   * cantidad en 1 en lugar de duplicar el ítem.
+   * Agrega un producto al carrito. Si el producto ya existe, incrementa su cantidad
+   * en lugar de duplicar el ítem.
+   *
+   * La cantidad inicial (y el incremento) es de 100 para productos que se venden
+   * por peso, porque ahí la cantidad se mide en gramos: partir de 1g no tiene uso
+   * práctico para el cliente, mientras que 100g es un punto de partida razonable
+   * que después puede afinar a mano.
    *
    * @param product - Producto del catálogo a agregar al carrito.
    */
   addToCart(product: CatalogProduct): void {
+    const step = product.soldByWeight ? 100 : 1;
     this._cart.update((cart) => {
       const existing = cart.find((i) => i.product.id === product.id);
       if (existing) {
         return cart.map((i) =>
-          i.product.id === product.id ? { ...i, quantity: i.quantity + 1 } : i
+          i.product.id === product.id ? { ...i, quantity: i.quantity + step } : i
         );
       }
-      return [...cart, { product, quantity: 1 }];
+      return [...cart, { product, quantity: step }];
     });
   }
 
@@ -130,7 +139,7 @@ export class CatalogService {
    *
    * @param productId - ID del producto cuya cantidad se quiere ajustar.
    * @param delta - Valor a sumar a la cantidad actual (positivo para aumentar,
-   *   negativo para disminuir).
+   *   negativo para disminuir; ±100 para productos por peso, ±1 para el resto).
    */
   updateQuantity(productId: number, delta: number): void {
     this._cart.update((cart) =>
@@ -140,6 +149,37 @@ export class CatalogService {
         )
         .filter((i) => i.quantity > 0)
     );
+  }
+
+  /**
+   * @description
+   * Fija la cantidad absoluta de un ítem del carrito, en lugar de aplicar un delta.
+   * Se usa desde el input de gramos de `ProductCardComponent`, donde el cliente
+   * tipea directamente lo que quiere (ej: "300") en vez de ir tocando +/-.
+   *
+   * Un valor inválido (`NaN`) o menor a 1 se ignora en lugar de eliminar el ítem:
+   * igual que en el POS admin, el cliente puede borrar el campo para reescribirlo
+   * sin perder el producto del carrito.
+   *
+   * @param productId - ID del producto cuya cantidad se quiere fijar.
+   * @param quantity - Nueva cantidad absoluta (gramos para productos por peso).
+   */
+  setQuantity(productId: number, quantity: number): void {
+    if (!Number.isFinite(quantity) || quantity < 1) return;
+    this._cart.update((cart) =>
+      cart.map((i) => (i.product.id === productId ? { ...i, quantity } : i))
+    );
+  }
+
+  /**
+   * @description Calcula el importe de un ítem del carrito (ver `catalogItemTotal`).
+   * Expuesto como método para que los templates de `CartComponent` y
+   * `OrderDialogComponent` lo invoquen directamente sobre cada ítem.
+   * @param item Ítem del carrito a calcular.
+   * @returns El importe del ítem en pesos.
+   */
+  itemTotal(item: CartItem): number {
+    return catalogItemTotal(item.product, item.quantity);
   }
 
   /**

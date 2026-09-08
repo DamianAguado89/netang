@@ -25,8 +25,8 @@
     <div class="order-summary">
       @for (item of catalogService.cart(); track item.product.id) {
         <div class="summary-item">
-          <span>{{ item.quantity }}x {{ item.product.name }}</span>
-          <span>${{ item.product.price * item.quantity | number:'1.0-0' }}</span>
+          <span>{{ item.quantity }}{{ item.product.soldByWeight ? 'g' : 'x' }} {{ item.product.name }}</span>
+          <span>${{ catalogService.itemTotal(item) | number:'1.0-0' }}</span>
         </div>
       }
       <div class="summary-total">

@@ -39,8 +39,23 @@ export class AuthService {
   /** Indica si hay un usuario con sesión iniciada. */
   readonly isLoggedIn = computed(() => this._currentUser() !== null);
 
-  /** Indica si el usuario autenticado tiene rol de administrador. */
-  readonly isAdmin = computed(() => this._currentUser()?.role === 'Admin');
+  /**
+   * Indica si el usuario autenticado tiene rol de administrador.
+   * El super admin también cuenta como admin: puede hacer todo lo que un admin
+   * puede, además de administrar usuarios y roles (ver `isSuperAdmin`).
+   */
+  readonly isAdmin = computed(() => {
+    const role = this._currentUser()?.role;
+    return role === 'Admin' || role === 'SuperAdmin';
+  });
+
+  /**
+   * Indica si el usuario autenticado es el super admin.
+   * Solo la cuenta configurada en `SuperAdminSeed:Email` del backend puede tener
+   * este rol — nunca se otorga desde la UI. Habilita el panel de administración
+   * de usuarios (`/admin/users`), donde se le puede dar el rol Admin a otra cuenta.
+   */
+  readonly isSuperAdmin = computed(() => this._currentUser()?.role === 'SuperAdmin');
 
   constructor() {
     this.loadUserFromStorage();

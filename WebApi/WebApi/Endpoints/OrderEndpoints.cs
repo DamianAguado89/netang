@@ -18,6 +18,14 @@ public static class OrderEndpoints
         group.MapPost("/", PlaceOrder);
     }
 
+    // Calcula el importe de un ítem del pedido. Para productos vendidos por peso, Price es
+    // el precio por kilogramo y Quantity son los gramos pedidos (ej: 300g a $20000/kg →
+    // $6000). Para el resto, Quantity son unidades y el cálculo es el de siempre.
+    private static decimal CalculateLineTotal(Product product, int quantity) =>
+        product.SoldByWeight
+            ? Math.Round(product.Price * quantity / 1000m, 2, MidpointRounding.AwayFromZero)
+            : product.Price * quantity;
+
     // Recibe el pedido del cliente, crea o reutiliza su registro y persiste la venta.
     // El flujo tiene tres etapas: validación → upsert de cliente → construcción de la venta.
     private static async Task<IResult> PlaceOrder(PlaceOrderRequest req, ApplicationDbContext db)
@@ -74,7 +82,7 @@ public static class OrderEndpoints
                 ProductId = product.Id,
                 Quantity = item.Quantity,
                 Price = product.Price,
-                Total = product.Price * item.Quantity
+                Total = CalculateLineTotal(product, item.Quantity)
             });
         }
 

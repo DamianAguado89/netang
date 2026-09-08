@@ -24,11 +24,10 @@ public record SaleDto(
     DateTime? ConfirmedAt
 );
 
-public record SaleDetailRequest(int ProductId, int Quantity, decimal Price);
+public record SaleDetailRequest(int ProductId, int Quantity);
 
 public record CreateSaleRequest(
     int CustomerId,
-    string DocumentNumber,
     string? PaymentType,
     string? Notes,
     List<SaleDetailRequest> SaleDetails

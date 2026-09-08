@@ -2,6 +2,7 @@ import { Routes } from '@angular/router';
 
 import { authGuard } from './auth/auth.guard';
 import { adminGuard } from './auth/admin.guard';
+import { superAdminGuard } from './auth/super-admin.guard';
 
 export const routes: Routes = [
   {
@@ -54,11 +55,25 @@ export const routes: Routes = [
       ),
   },
   {
+    path: 'admin/pos',
+    canActivate: [adminGuard],
+    loadComponent: () =>
+      import('./admin/pos/pos.component').then((m) => m.PosComponent),
+  },
+  {
     path: 'admin/billing/:id',
     canActivate: [adminGuard],
     loadComponent: () =>
       import('./admin/billing/billing.component').then(
         (m) => m.BillingComponent
+      ),
+  },
+  {
+    path: 'admin/users',
+    canActivate: [superAdminGuard],
+    loadComponent: () =>
+      import('./admin/users/users-admin.component').then(
+        (m) => m.UsersAdminComponent
       ),
   },
   { path: '**', redirectTo: '' },

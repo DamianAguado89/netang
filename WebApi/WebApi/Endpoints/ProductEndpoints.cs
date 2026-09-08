@@ -29,6 +29,12 @@ public static class ProductEndpoints
         group.MapDelete("/{id:int}", DeleteProduct);
     }
 
+    // Precio de venta = precio de lista + porcentaje de margen. Se calcula siempre en el
+    // servidor (nunca se confía en un Price enviado por el cliente) para que sea la única
+    // fuente de verdad y no se desincronice con ListPrice/MarkupPercentage.
+    private static decimal CalculatePrice(decimal listPrice, decimal markupPercentage) =>
+        Math.Round(listPrice * (1 + markupPercentage / 100m), 2, MidpointRounding.AwayFromZero);
+
     // Devuelve la lista completa de productos con su categoría incluida.
     // La proyección con Select construye el DTO directamente en SQL — EF Core nunca carga
     // la entidad completa en memoria, evitando over-fetching.
@@ -41,7 +47,8 @@ public static class ProductEndpoints
             .Select(p => new ProductDto(
                 p.Id, p.Name, p.Description,
                 p.ImageData != null ? $"/api/products/{p.Id}/image" : null,
-                p.Price, p.Stock, p.IsActive, p.CategoryId, p.Category!.Name, p.RegistrationDate))
+                p.Price, p.ListPrice, p.MarkupPercentage,
+                p.Stock, p.SoldByWeight, p.IsActive, p.CategoryId, p.Category!.Name, p.RegistrationDate))
             .ToListAsync();
         return TypedResults.Ok(list);
     }
@@ -57,7 +64,8 @@ public static class ProductEndpoints
             ? TypedResults.Ok(new ProductDto(
                 p.Id, p.Name, p.Description,
                 p.ImageData != null ? $"/api/products/{p.Id}/image" : null,
-                p.Price, p.Stock, p.IsActive, p.CategoryId, p.Category!.Name, p.RegistrationDate))
+                p.Price, p.ListPrice, p.MarkupPercentage,
+                p.Stock, p.SoldByWeight, p.IsActive, p.CategoryId, p.Category!.Name, p.RegistrationDate))
             : TypedResults.NotFound();
     }
 
@@ -104,8 +112,11 @@ public static class ProductEndpoints
         {
             Name = req.Name,
             Description = req.Description,
-            Price = req.Price,
+            ListPrice = req.ListPrice,
+            MarkupPercentage = req.MarkupPercentage,
+            Price = CalculatePrice(req.ListPrice, req.MarkupPercentage),
             Stock = req.Stock,
+            SoldByWeight = req.SoldByWeight,
             IsActive = req.IsActive,
             CategoryId = req.CategoryId,
             RegistrationDate = DateTime.UtcNow
@@ -117,7 +128,8 @@ public static class ProductEndpoints
         return TypedResults.Created($"/api/products/{product.Id}",
             new ProductDto(product.Id, product.Name, product.Description,
                 product.ImageData != null ? $"/api/products/{product.Id}/image" : null,
-                product.Price, product.Stock, product.IsActive, product.CategoryId,
+                product.Price, product.ListPrice, product.MarkupPercentage,
+                product.Stock, product.SoldByWeight, product.IsActive, product.CategoryId,
                 product.Category!.Name, product.RegistrationDate));
     }
 
@@ -135,8 +147,11 @@ public static class ProductEndpoints
 
         product.Name = req.Name;
         product.Description = req.Description;
-        product.Price = req.Price;
+        product.ListPrice = req.ListPrice;
+        product.MarkupPercentage = req.MarkupPercentage;
+        product.Price = CalculatePrice(req.ListPrice, req.MarkupPercentage);
         product.Stock = req.Stock;
+        product.SoldByWeight = req.SoldByWeight;
         product.IsActive = req.IsActive;
         product.CategoryId = req.CategoryId;
 

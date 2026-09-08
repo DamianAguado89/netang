@@ -9,18 +9,18 @@
     }
   </div>
 
-  <mat-card-header>
+  <div class="card-title-row">
     <mat-card-title>{{ product().name }}</mat-card-title>
     <mat-chip-set>
       <mat-chip>{{ product().categoryName }}</mat-chip>
     </mat-chip-set>
-  </mat-card-header>
+  </div>
 
   <mat-card-content>
     @if (product().description) {
       <p class="description">{{ product().description }}</p>
     }
-    <p class="price">${{ product().price | number:'1.0-0' }}</p>
+    <p class="price">${{ product().price | number:'1.0-0' }}{{ product().soldByWeight ? ' /kg' : '' }}</p>
   </mat-card-content>
 
   <mat-card-actions>
@@ -31,11 +31,38 @@
       </button>
     } @else {
       <div class="qty-controls">
-        <button mat-icon-button (click)="changeQty.emit(-1)" aria-label="Quitar uno">
+        <button
+          mat-icon-button
+          (click)="changeQty.emit(product().soldByWeight ? -100 : -1)"
+          aria-label="Quitar"
+        >
           <mat-icon>remove</mat-icon>
         </button>
-        <span class="qty-value">{{ quantity() }}</span>
-        <button mat-icon-button (click)="changeQty.emit(1)" aria-label="Agregar uno">
+        @if (product().soldByWeight) {
+          <input
+            type="text"
+            inputmode="numeric"
+            class="qty-input"
+            [value]="quantity()"
+            (input)="onQuantityInput($event)"
+            (keydown)="guardQuantityKey($event)"
+            [attr.aria-label]="'Cantidad en gramos de ' + product().name"
+          />
+          <span class="qty-unit">g</span>
+          <mat-icon
+            class="info-icon"
+            matTooltip="1000 g equivalen a 1 kg"
+            aria-label="1000 gramos equivalen a 1 kilo"
+            tabindex="0"
+          >info</mat-icon>
+        } @else {
+          <span class="qty-value">{{ quantity() }}</span>
+        }
+        <button
+          mat-icon-button
+          (click)="changeQty.emit(product().soldByWeight ? 100 : 1)"
+          aria-label="Agregar"
+        >
           <mat-icon>add</mat-icon>
         </button>
       </div>
