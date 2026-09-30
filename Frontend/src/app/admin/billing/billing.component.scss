@@ -1,5 +1,5 @@
 .admin-header {
-  background-color: #1b5e20;
+  background-color: var(--dp-primary-ink);
   color: white;
   z-index: 100;
 
@@ -11,7 +11,7 @@
 
   .brand-subtitle {
     font-size: 0.7rem;
-    opacity: 0.85;
+    color: var(--dp-primary-subtle-text);
     letter-spacing: 0.02em;
   }
 
@@ -29,11 +29,11 @@
 
 .admin-content {
   min-height: calc(100vh - 56px);
-  background-color: #f5f5f5;
+  background-color: var(--dp-bg);
 }
 
 .billing-ticket {
-  background: white;
+  background: var(--dp-surface);
   border-radius: 8px;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.12);
   padding: 24px;
@@ -52,7 +52,7 @@
   width: 48px;
   height: 48px;
   border-radius: 50%;
-  background-color: #2e7d32;
+  background-color: var(--dp-primary);
   color: white;
   font-weight: bold;
   font-size: 1rem;
@@ -67,16 +67,24 @@
 
 .ticket-sub {
   font-size: 0.85rem;
-  color: #757575;
+  color: var(--dp-text-muted);
 }
 
 .ticket-meta {
   padding: 0 4px;
 }
 
+.customer-box {
+  background-color: var(--dp-primary-soft);
+  border-left: 3px solid var(--dp-primary);
+  border-radius: 4px;
+  padding: 10px 14px;
+  margin-bottom: 12px;
+}
+
 .ticket-number {
   font-size: 0.9rem;
-  color: #555;
+  color: var(--dp-text);
   line-height: 1.6;
 }
 
@@ -89,7 +97,7 @@
   justify-content: space-between;
   font-size: 1.2rem;
   font-weight: 700;
-  color: #2e7d32;
+  color: var(--dp-accent);
   margin-top: 12px;
 }
 
@@ -100,7 +108,7 @@
 
 .confirmed-icon {
   font-size: 64px;
-  color: #2e7d32;
+  color: var(--dp-success-text);
   width: 64px;
   height: 64px;
 }
@@ -113,7 +121,7 @@
 
 .confirmed-sub {
   font-size: 0.9rem;
-  color: #757575;
+  color: var(--dp-text-muted);
   margin-top: 4px;
 }
 

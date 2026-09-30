@@ -12,7 +12,7 @@
   <div class="card-title-row">
     <mat-card-title>{{ product().name }}</mat-card-title>
     <mat-chip-set>
-      <mat-chip>{{ product().categoryName }}</mat-chip>
+      <mat-chip class="category-tag">{{ product().categoryName }}</mat-chip>
     </mat-chip-set>
   </div>
 
@@ -25,7 +25,7 @@
 
   <mat-card-actions>
     @if (quantity() === 0) {
-      <button mat-flat-button color="primary" (click)="add.emit()">
+      <button mat-flat-button color="accent" (click)="add.emit()">
         <mat-icon>add_shopping_cart</mat-icon>
         Agregar
       </button>

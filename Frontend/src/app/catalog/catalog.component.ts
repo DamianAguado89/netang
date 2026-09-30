@@ -28,7 +28,7 @@ import { ProductCardComponent } from '@app/catalog/product-card/product-card.com
  * Vista pública del catálogo de productos de Doña Pierina.
  *
  * @description
- * Permite a los clientes explorar la oferta de productos Sin TACC,
+ * Permite a los clientes explorar la oferta de productos regionales,
  * filtrar por categoría y gestionar el carrito de compras antes de
  * confirmar su pedido mediante un dialog de orden.
  *

@@ -36,7 +36,7 @@
             />
           </mat-form-field>
 
-          <button mat-raised-button color="primary" (click)="openNewCustomerDialog()">
+          <button mat-raised-button color="primary" class="ms-auto" (click)="openNewCustomerDialog()">
             <mat-icon>person_add</mat-icon>
             Nuevo Cliente
           </button>
@@ -149,7 +149,7 @@
           </div>
         } @else {
           <div class="table-wrapper mb-3">
-            <table mat-table [dataSource]="cartLines()" [trackBy]="trackCartLine" class="w-100">
+            <table mat-table [dataSource]="cartLines()" [trackBy]="trackCartLine">
 
               <ng-container matColumnDef="name">
                 <th mat-header-cell *matHeaderCellDef>Producto</th>

@@ -16,12 +16,14 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatInputModule } from '@angular/material/input';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatSnackBar } from '@angular/material/snack-bar';
+import { MatSortModule, Sort } from '@angular/material/sort';
 import { MatTableModule } from '@angular/material/table';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { CategoryAdminService } from '@app/admin/categories/category-admin.service';
 import { CategoryFormDialogComponent } from '@app/admin/categories/category-form-dialog/category-form-dialog.component';
 import { CategoryDeleteDialogComponent } from '@app/admin/categories/category-delete-dialog/category-delete-dialog.component';
 import { CategoryDto } from '@app/models/product.model';
+import { sortData } from '@app/shared/sort.util';
 
 /**
  * @description
@@ -48,6 +50,7 @@ import { CategoryDto } from '@app/models/product.model';
     MatIconModule,
     MatInputModule,
     MatProgressSpinnerModule,
+    MatSortModule,
     MatTableModule,
     MatTooltipModule,
   ],
@@ -88,6 +91,31 @@ export class CategoryListComponent implements OnInit {
       c.name.toLowerCase().includes(term)
     );
   });
+
+  /** Estado de ordenamiento activo, capturado desde `(matSortChange)`. */
+  readonly sortState = signal<Sort>({ active: '', direction: '' });
+
+  /** Categorías filtradas y ordenadas según `sortState`, listas para el `mat-table`. */
+  readonly sortedCategories = computed(() =>
+    sortData(this.filteredCategories(), this.sortState(), this.sortAccessor)
+  );
+
+  /**
+   * @description Extrae el valor comparable de una categoría para la columna
+   * de ordenamiento activa. Usado por `sortData` (ver `shared/sort.util.ts`).
+   */
+  private readonly sortAccessor = (category: CategoryDto, column: string) => {
+    switch (column) {
+      case 'name':
+        return category.name;
+      case 'status':
+        return category.isActive ? 1 : 0;
+      case 'registrationDate':
+        return new Date(category.registrationDate);
+      default:
+        return null;
+    }
+  };
 
   /**
    * @description

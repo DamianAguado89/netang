@@ -16,6 +16,7 @@ import { MatIconModule } from '@angular/material/icon';
 import { MatInputModule } from '@angular/material/input';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatSnackBar } from '@angular/material/snack-bar';
+import { MatSortModule, Sort } from '@angular/material/sort';
 import { MatTableModule } from '@angular/material/table';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { ProductAdminService } from '@app/admin/products/product-admin.service';
@@ -23,6 +24,7 @@ import { ProductFormDialogComponent } from '@app/admin/products/product-form-dia
 import { ProductDeleteDialogComponent } from '@app/admin/products/product-delete-dialog/product-delete-dialog.component';
 import { ProductDto } from '@app/models/product.model';
 import { environment } from '@env/environment';
+import { sortData } from '@app/shared/sort.util';
 
 /**
  * @description
@@ -47,6 +49,7 @@ import { environment } from '@env/environment';
     MatIconModule,
     MatInputModule,
     MatProgressSpinnerModule,
+    MatSortModule,
     MatTableModule,
     MatTooltipModule,
   ],
@@ -108,6 +111,35 @@ export class ProductListComponent implements OnInit {
       p.name.toLowerCase().includes(term)
     );
   });
+
+  /** Estado de ordenamiento activo, capturado desde `(matSortChange)`. */
+  readonly sortState = signal<Sort>({ active: '', direction: '' });
+
+  /** Productos filtrados y ordenados según `sortState`, listos para el `mat-table`. */
+  readonly sortedProducts = computed(() =>
+    sortData(this.filteredProducts(), this.sortState(), this.sortAccessor)
+  );
+
+  /**
+   * @description Extrae el valor comparable de un producto para la columna de
+   * ordenamiento activa. Usado por `sortData` (ver `shared/sort.util.ts`).
+   */
+  private readonly sortAccessor = (product: ProductDto, column: string) => {
+    switch (column) {
+      case 'name':
+        return product.name;
+      case 'category':
+        return product.categoryName;
+      case 'price':
+        return product.price;
+      case 'stock':
+        return product.stock;
+      case 'status':
+        return product.isActive ? 1 : 0;
+      default:
+        return null;
+    }
+  };
 
   /**
    * @description

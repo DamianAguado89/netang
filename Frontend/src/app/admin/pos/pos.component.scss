@@ -1,5 +1,5 @@
 .admin-header {
-  background-color: #1b5e20;
+  background-color: var(--dp-primary-ink);
   color: white;
   z-index: 100;
 
@@ -11,7 +11,7 @@
 
   .brand-subtitle {
     font-size: 0.7rem;
-    opacity: 0.85;
+    color: var(--dp-primary-subtle-text);
     letter-spacing: 0.02em;
   }
 
@@ -29,7 +29,7 @@
 
 .admin-content {
   min-height: calc(100vh - 56px);
-  background-color: #f5f5f5;
+  background-color: var(--dp-bg);
 }
 
 .pos-container {
@@ -39,7 +39,7 @@
 }
 
 .pos-step {
-  background-color: #fff;
+  background-color: var(--dp-surface);
   border-radius: 8px;
   padding: 1.25rem;
   box-shadow: 0 1px 4px rgba(0, 0, 0, 0.12);
@@ -47,7 +47,7 @@
 
 .step-heading {
   .step-icon {
-    color: #2e7d32;
+    color: var(--dp-primary);
   }
 
   .step-title {
@@ -77,29 +77,29 @@
   width: 100%;
   text-align: left;
   padding: 10px 14px;
-  border: 1px solid #e0e0e0;
+  border: 1px solid var(--dp-border);
   border-radius: 8px;
-  background-color: #fff;
+  background-color: var(--dp-surface);
   cursor: pointer;
   transition: background-color 0.15s ease, border-color 0.15s ease;
 
   &:hover {
-    background-color: #edf7ee;
-    border-color: #a5d6a7;
+    background-color: var(--dp-primary-soft);
+    border-color: var(--dp-primary);
   }
 
   &.static {
     cursor: default;
 
     &:hover {
-      background-color: #fff;
-      border-color: #e0e0e0;
+      background-color: var(--dp-surface);
+      border-color: var(--dp-border);
     }
   }
 
   .result-icon {
     flex-shrink: 0;
-    color: #2e7d32;
+    color: var(--dp-primary);
   }
 
   .result-body {
@@ -116,7 +116,7 @@
 
   .result-sub {
     font-size: 0.75rem;
-    color: rgba(0, 0, 0, 0.6);
+    color: var(--dp-text-muted);
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
@@ -124,31 +124,32 @@
 
   .result-chevron {
     flex-shrink: 0;
-    color: rgba(0, 0, 0, 0.38);
+    color: var(--dp-text-muted);
   }
 }
 
 .customer-banner {
   padding: 12px 16px;
-  background-color: #edf7ee;
-  border: 1px solid #a5d6a7;
-  border-left: 3px solid #2e7d32;
+  background-color: var(--dp-primary-soft);
+  border: 1px solid var(--dp-border);
+  border-left: 3px solid var(--dp-primary);
   border-radius: 4px;
 
   .customer-icon {
-    color: #2e7d32;
+    color: var(--dp-primary);
   }
 
   .customer-label {
     font-size: 0.7rem;
     text-transform: uppercase;
     letter-spacing: 0.04em;
-    color: rgba(0, 0, 0, 0.6);
+    color: var(--dp-text-muted);
   }
 
   .customer-name {
     font-weight: 600;
     line-height: 1.2;
+    color: var(--dp-primary-ink);
   }
 }
 
@@ -156,10 +157,32 @@
   overflow-x: auto;
   -webkit-overflow-scrolling: touch;
   border-radius: 8px;
-  border: 1px solid #e0e0e0;
+  border: 1px solid var(--dp-border);
 
   table {
-    min-width: 640px;
+    table-layout: fixed;
+    width: 100%;
+  }
+
+  .mat-column-name {
+    width: 35%;
+  }
+
+  .mat-column-price {
+    width: 20%;
+  }
+
+  .mat-column-quantity {
+    width: 15%;
+  }
+
+  .mat-column-subtotal {
+    width: 20%;
+  }
+
+  .mat-column-actions {
+    width: 10%;
+    text-align: right;
   }
 }
 
@@ -181,8 +204,8 @@
 
 .total-row {
   padding: 12px 16px;
-  background-color: #fafafa;
-  border: 1px solid #e0e0e0;
+  background-color: var(--dp-bg);
+  border: 1px solid var(--dp-border);
   border-radius: 8px;
 
   .total-label {
@@ -190,18 +213,18 @@
     font-weight: 600;
     text-transform: uppercase;
     letter-spacing: 0.04em;
-    color: rgba(0, 0, 0, 0.6);
+    color: var(--dp-text-muted);
   }
 
   .total-value {
     font-size: 1.35rem;
     font-weight: 700;
-    color: #1b5e20;
+    color: var(--dp-accent);
   }
 }
 
 .empty-hint {
-  color: rgba(0, 0, 0, 0.54);
+  color: var(--dp-text-muted);
 
   mat-icon {
     font-size: 40px;
@@ -225,9 +248,9 @@
   align-items: center;
   gap: 8px;
   padding: 10px 14px;
-  background-color: #ffebee;
-  color: #c62828;
-  border: 1px solid #ef9a9a;
+  background-color: var(--dp-danger-bg);
+  color: var(--dp-danger-text);
+  border: 1px solid var(--dp-danger-text);
   border-radius: 4px;
   font-size: 0.875rem;
 

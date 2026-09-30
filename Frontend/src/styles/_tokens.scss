@@ -1,0 +1,31 @@
+// Doña Pierina — Design tokens "Lavanda y Salvia"
+//
+// Fuente única de verdad para la paleta de marca. Los componentes NUNCA
+// deben usar hex sueltos: siempre var(--dp-...). Cambiar de paleta a futuro
+// implica editar únicamente este archivo.
+:root {
+  // Marca — lavanda
+  --dp-primary: #6b5aa6;
+  --dp-primary-hover: #5a4a93;
+  --dp-primary-soft: #ede9f7;
+  --dp-primary-ink: #3f3563;
+  --dp-primary-subtle-text: #cfc6ec; // texto/subtítulo sobre barras oscuras (--dp-primary-ink)
+
+  // Acento — salvia (precios, montos, totales)
+  --dp-accent: #5e7f4f;
+
+  // Superficies
+  --dp-bg: #faf8f5;
+  --dp-surface: #ffffff;
+  --dp-border: #ece8f2;
+
+  // Texto
+  --dp-text: #2b2638;
+  --dp-text-muted: #6f6a7a;
+
+  // Estados
+  --dp-success-bg: #e6efdf;
+  --dp-success-text: #3f5c33;
+  --dp-danger-bg: #fbe6e3;
+  --dp-danger-text: #9a3328;
+}

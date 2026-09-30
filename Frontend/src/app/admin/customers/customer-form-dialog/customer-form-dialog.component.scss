@@ -5,7 +5,7 @@ h2[mat-dialog-title] {
 }
 
 .dialog-title-icon {
-  color: #2e7d32;
+  color: var(--dp-primary);
 }
 
 mat-dialog-content {
@@ -28,9 +28,9 @@ mat-dialog-content {
   align-items: center;
   gap: 8px;
   padding: 10px 14px;
-  background-color: #ffebee;
-  color: #c62828;
-  border: 1px solid #ef9a9a;
+  background-color: var(--dp-danger-bg);
+  color: var(--dp-danger-text);
+  border: 1px solid var(--dp-danger-text);
   border-radius: 4px;
   font-size: 0.875rem;
 

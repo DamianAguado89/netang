@@ -16,11 +16,13 @@ import { MatInputModule } from '@angular/material/input';
 import { MatProgressSpinnerModule } from '@angular/material/progress-spinner';
 import { MatSelectModule } from '@angular/material/select';
 import { MatSnackBar } from '@angular/material/snack-bar';
+import { MatSortModule, Sort } from '@angular/material/sort';
 import { MatTableModule } from '@angular/material/table';
 import { MatTooltipModule } from '@angular/material/tooltip';
 import { AuthService } from '@app/auth/auth.service';
 import { UserAdminService } from '@app/admin/users/user-admin.service';
 import { UserDto } from '@app/models/user.model';
+import { sortData } from '@app/shared/sort.util';
 
 /**
  * @description
@@ -51,6 +53,7 @@ import { UserDto } from '@app/models/user.model';
     MatInputModule,
     MatProgressSpinnerModule,
     MatSelectModule,
+    MatSortModule,
     MatTableModule,
     MatTooltipModule,
   ],
@@ -100,6 +103,31 @@ export class UsersAdminComponent implements OnInit {
           u.email.toLowerCase().includes(term)
       );
   });
+
+  /** Estado de ordenamiento activo, capturado desde `(matSortChange)`. */
+  readonly sortState = signal<Sort>({ active: '', direction: '' });
+
+  /** Usuarios filtrados y ordenados según `sortState`, listos para el `mat-table`. */
+  readonly sortedUsers = computed(() =>
+    sortData(this.filteredUsers(), this.sortState(), this.sortAccessor)
+  );
+
+  /**
+   * @description Extrae el valor comparable de un usuario para la columna de
+   * ordenamiento activa. Usado por `sortData` (ver `shared/sort.util.ts`).
+   */
+  private readonly sortAccessor = (user: UserDto, column: string) => {
+    switch (column) {
+      case 'fullName':
+        return user.fullName;
+      case 'email':
+        return user.email;
+      case 'role':
+        return user.role;
+      default:
+        return null;
+    }
+  };
 
   /**
    * @description
